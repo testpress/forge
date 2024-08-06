@@ -1,4 +1,4 @@
-exclude: ^app/migrations/
+exclude: ^app/db/migrations/
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
