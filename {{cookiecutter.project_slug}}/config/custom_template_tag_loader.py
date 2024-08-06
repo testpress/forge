@@ -4,6 +4,13 @@ from django.template.backends.django import get_package_libraries
 
 
 def get_custom_template_tag_modules(candidates):
+    """
+    Yield custom template tag module names and their full import paths.
+
+    :param candidates: A list of potential module paths to search for
+    template tags.
+    :return: A generator yielding tuples of (module_name, full_name).
+    """
     for candidate in candidates:
         try:
             pkg = import_module(candidate)
@@ -13,11 +20,18 @@ def get_custom_template_tag_modules(candidates):
 
         if hasattr(pkg, "__path__"):
             for name in get_package_libraries(pkg):
-                yield name[len(candidate) + 1 :], name  # noqa: E203
+                module_name = name[len(candidate) + 1 :]  # noqa: E203
+                yield module_name, name
 
 
 def get_custom_template_tags(folders):
-    return {
-        module_name: full_name
-        for module_name, full_name in get_custom_template_tag_modules(folders)
-    }
+    """
+    Return a dictionary mapping custom template tag module names
+    to their full import paths.
+
+    :param folders: A list of folders to search for custom
+     template tag modules.
+    :return: A dictionary with module names as keys and full import paths
+     as values.
+    """
+    return dict(get_custom_template_tag_modules(folders))

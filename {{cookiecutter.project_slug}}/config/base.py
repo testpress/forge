@@ -2,7 +2,6 @@
 Django settings for {{ cookiecutter.project_name }} project.
 """
 
-import os
 from pathlib import Path
 
 import environ
@@ -15,7 +14,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env()
 
 # Take environment variables from .env file
-environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
+environ.Env.read_env(BASE_DIR / ".env")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
