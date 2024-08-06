@@ -6,6 +6,8 @@ from pathlib import Path
 import environ
 import os
 
+from .custom_template_tag_loader import get_custom_template_tags
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -64,6 +66,9 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'config.urls'
 
+
+CUSTOM_TEMPLATE_TAG_FOLDERS = ["app.helpers"]
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -76,6 +81,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            "libraries": get_custom_template_tags(CUSTOM_TEMPLATE_TAG_FOLDERS),
         },
     },
 ]
