@@ -31,9 +31,11 @@ DEBUG = env.bool("DJANGO_DEBUG", False)
 
 # Application definition
 
+# fmt: off
 LOCAL_APPS = [
     "apps.app.{{ cookiecutter.project_slug.replace(" ", " ")|capitalize }}Config",  # noqa: E501
 ]
+# fmt: on
 
 DJANGO_APPS = [
     "django.contrib.admin",
