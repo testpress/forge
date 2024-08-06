@@ -1,4 +1,4 @@
 # ruff: noqa: E501
 from .base import *  # noqa: F403
 
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")  # noqa: F405
