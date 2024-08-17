@@ -11,5 +11,6 @@
     "GPLv3",
     "Apache Software License 2.0",
     "Not open source"
-  ]
+  ],
+  "use_preline": "n"
 }

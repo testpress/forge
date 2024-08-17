@@ -8,6 +8,7 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-json
+        exclude: '^{{cookiecutter\.project_slug}}/app/static/package.json$'
       - id: check-toml
       - id: check-xml
       - id: check-yaml
