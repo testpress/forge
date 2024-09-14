@@ -1,13 +1,16 @@
 import logging
 import os
+import shutil
 import subprocess
+from pathlib import Path
 
-from django.core.management.commands.runserver import (
+from django.contrib.staticfiles.management.commands.runserver import (
     Command as RunserverCommand,
 )
 
 logging.basicConfig(
-    level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
+    level=logging.DEBUG,
+    format="%(asctime)s - %(levelname)s - %(message)s",
 )
 
 
@@ -18,20 +21,33 @@ class Command(RunserverCommand):
             # If this is the reloader, just run the server without
             # starting Vite
             logging.debug(
-                f"Reloader process, not starting Vite. PID: {os.getpid()}"
+                "Reloader process, not starting Vite. PID: %s",
+                os.getpid(),
             )
             super().handle(*args, **options)
         else:
-            logging.debug(f"Starting Vite... (PID: {os.getpid()})")
-            vite_process = subprocess.Popen(
-                ["npm", "start"], cwd=os.path.join(os.getcwd(), "app/static")
+            logging.debug("Starting Vite... (PID: %s)", os.getpid())
+
+            # Use shutil.which to get the full path to npm
+            npm_path = shutil.which("npm")
+            if not npm_path:
+                logging.error(
+                    "npm executable not found. "
+                    "Please ensure npm is installed and available in PATH.",
+                )
+                return
+
+            vite_process = subprocess.Popen(  # noqa: S603
+                [npm_path, "start"],
+                cwd=Path.cwd() / "app/static",
             )
             try:
                 logging.debug(
-                    f"Starting Django server... (PID: {os.getpid()})"
+                    "Starting Django server... (PID: %s)",
+                    os.getpid(),
                 )
                 super().handle(*args, **options)
             finally:
-                logging.debug(f"Terminating Vite... (PID: {os.getpid()})")
+                logging.debug("Terminating Vite... (PID: %s)", os.getpid())
                 vite_process.terminate()
                 vite_process.wait()
