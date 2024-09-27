@@ -12,3 +12,15 @@ INTERNAL_IPS = [
     "127.0.0.1",
     "localhost",
 ]
+
+
+INSTALLED_APPS += [  # noqa: F405
+    "debug_toolbar",
+]
+
+MIDDLEWARE += [  # noqa: F405
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
+]
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"  # noqa: F405
