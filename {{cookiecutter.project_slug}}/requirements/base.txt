@@ -6,3 +6,4 @@ django-widget-tweaks==1.5.0
 ipython==8.26.0
 django-safedelete==1.4.0
 django-simple-history==3.7.0
+pillow==10.4.0
