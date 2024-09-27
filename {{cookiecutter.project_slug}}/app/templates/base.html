@@ -1,0 +1,64 @@
+{% raw %}{% load static i18n %}
+
+<!DOCTYPE html>
+{% get_current_language as LANGUAGE_CODE %}
+<html class="{% block html_class %}relative min-h-full{% endblock html_class %}"
+      lang="{{ LANGUAGE_CODE }}">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="robots"
+          content="max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <title>
+      {% block title %}{% endraw %}{{ cookiecutter.project_name}}{% raw %}{% endblock title %}
+    </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description"
+          content="{% endraw %}{{ cookiecutter.description}}{% raw %}" />
+    <meta name="author" content="{% endraw %}{{ cookiecutter.author_name }}{% raw %}" />
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}" />
+    <!-- Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+          rel="stylesheet" />
+    <!-- prettier-ignore -->
+    {% block extra_head %}
+    {% endblock extra_head %}
+    {% if debug %}
+      <!-- Development: Load styles and scripts from Vite server -->
+      {# djlint:off H022 #}
+      <link rel="stylesheet" href="http://localhost:5173/css/styles.css" />
+      {# djlint:on #}
+    {% else %}
+      <!-- Production: Load built styles and scripts -->
+      <link rel="stylesheet" href="{% static 'dist/css/styles.css' %}" />
+    {% endif %}
+    <script defer
+            src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://unpkg.com/htmx.org@2.0.2"></script>
+  </head>
+  <body class="{% block bodyclass %}{% endblock bodyclass %}">
+    {% block body %}
+      <header class="flex flex-col z-50">
+        {% block header %}
+        {% endblock header %}
+      </header>
+      <main class="pb-14 sm:pb-16">
+        {% block content %}
+        {% endblock content %}
+      </main>
+      <footer>
+        {% block footer %}
+        {% endblock footer %}
+      </footer>
+    {% endblock body %}
+    {% if debug %}
+      <script type="module" src="http://localhost:5173/js/main.js"></script>
+    {% else %}
+      <script type="module" src="{% static 'dist/js/main.js' %}"></script>
+    {% endif %}
+    <!-- prettier-ignore -->
+    {% block extra_scripts %}
+    {% endblock extra_scripts %}
+  </body>
+</html>
+{% endraw %}

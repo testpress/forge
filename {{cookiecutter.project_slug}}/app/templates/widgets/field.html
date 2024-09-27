@@ -1,0 +1,43 @@
+{% raw %}{% if field.field.widget.input_type == 'text' %}
+  {% include "widgets/text_input.html" with field=field %}
+{% elif field.field.widget.input_type == 'textarea' %}
+  {% include "widgets/textarea.html" with field=field %}
+{% elif field.field.widget.input_type == 'password' %}
+  {% include "widgets/password_input.html" with field=field %}
+{% elif field.field.widget.input_type == 'checkbox' %}
+  {% include "widgets/checkbox.html" with field=field %}
+{% elif field.field.widget.input_type == 'radio' %}
+  {% include "widgets/radio.html" with field=field %}
+{% elif field.field.widget.input_type == 'select' %}
+  {% if field.field.widget.allow_multiple_selected %}
+    {% include "widgets/multiple_select.html" with field=field %}
+  {% else %}
+    {% include "widgets/select.html" with field=field %}
+  {% endif %}
+{% elif field.field.widget.input_type == 'file' %}
+  {% include "widgets/file_input.html" with field=field %}
+  {% comment %}
+{% elif field.field.widget.input_type == 'number' %}
+  {% include "widgets/number_input.html" with field=field %}
+{% elif field.field.widget.input_type == 'email' %}
+  {% include "widgets/email_input.html" with field=field %}
+{% elif field.field.widget.input_type == 'url' %}
+  {% include "widgets/url_input.html" with field=field %}
+{% elif field.field.widget.input_type == 'date' %}
+  {% include "widgets/date_input.html" with field=field %}
+{% elif field.field.widget.input_type == 'datetime-local' %}
+  {% include "widgets/datetime_input.html" with field=field %}
+{% elif field.field.widget.input_type == 'time' %}
+  {% include "widgets/time_input.html" with field=field %}
+{% elif field.field.widget.input_type == 'hidden' %}
+  {% include "widgets/hidden_input.html" with field=field %}
+{% elif field.field.widget.input_type == 'range' %}
+  {% include "widgets/range_input.html" with field=field %}
+{% elif field.field.widget.input_type == 'color' %}
+  {% include "widgets/color_input.html" with field=field %}
+{% elif field.field.widget.input_type == 'tel' %}
+  {% include "widgets/tel_input.html" with field=field %}
+  {% endcomment %}
+{% else %}
+  {% include "widgets/text_input.html" with field=field %}
+{% endif %}{% endraw %}

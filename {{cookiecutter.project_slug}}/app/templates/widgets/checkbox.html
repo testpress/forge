@@ -1,0 +1,38 @@
+{% raw %}{% load i18n widget_tweaks %}
+
+<div>
+  {% if field.field.choices %}
+    <label for="{{ field.id_for_label }}"
+           class="block text-sm font-medium mb-2 dark:text-white">{{ field.label }}</label>
+    <div class="grid sm:grid-cols-3 gap-2">
+      {% for checkbox in field.field.choices %}
+        <label for="{{ field.auto_id }}_{{ forloop.counter }}"
+               class="flex p-3 w-full bg-white border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400">
+          <input type="checkbox"
+                 id="{{ field.auto_id }}_{{ forloop.counter }}"
+                 name="{{ field.name }}"
+                 value="{{ checkbox.0 }}"
+                 {% if checkbox.0 in field.value %}checked{% endif %}
+                 class="shrink-0 mt-0.5 {% if field.errors %}border-red-500{% else %}border-gray-200{% endif %} rounded text-blue-600 focus:ring-blue-500 dark:bg-neutral-800 dark:border-neutral-700 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800" />
+          <span class="text-sm text-gray-500 ms-3 dark:text-neutral-400">{{ checkbox.1 }}</span>
+        </label>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="grid sm:grid-cols-3 gap-2">
+      <label for="{{ field.id_for_label }}"
+             class="flex py-2 px-3 w-full bg-white border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400">
+        {# djlint:off #}
+        {% if field.errors %}
+        {{ field|add_class:"shrink-0 mt-0.5 border-red-500 rounded text-blue-600 focus:ring-blue-500 dark:bg-neutral-800 dark:border-neutral-700 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800" }}
+        {% else %}
+        {{ field|add_class:"shrink-0 mt-0.5 border-gray-200 rounded text-blue-600 focus:ring-blue-500 dark:bg-neutral-800 dark:border-neutral-700 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800" }}
+        {% endif %}
+        {# djlint:on #}
+        <span class="text-sm ms-3 dark:text-white">{{ field.label }}</span>
+      </label>
+    </div>
+  {% endif %}
+  {% include "./errors.html" %}
+  {% include "./help_text.html" %}
+</div>{% endraw %}
