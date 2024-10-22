@@ -5,9 +5,10 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from safedelete.models import SafeDeleteManager
 
 
-class UserManager(BaseUserManager):
+class UserManager(BaseUserManager, SafeDeleteManager):
     def create_user(self, phone_number, password=None, **extra_fields):
         """
         Create and return a regular user with a phone number and password.
@@ -27,7 +28,6 @@ class UserManager(BaseUserManager):
         """
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
-        extra_fields.setdefault("category", self.model.STAFF)
 
         if extra_fields.get("is_staff") is not True:
             message = "Superuser must have is_staff=True."
