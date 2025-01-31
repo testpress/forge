@@ -19,6 +19,11 @@ def create_env_file():
 SECRET_KEY={secret_key}
 DATABASE_URL=sqlite:///db.sqlite3
 ALLOWED_HOSTS=localhost,127.0.0.1
+{% if cookiecutter.use_sentry == 'y' %}
+# Sentry
+# ------------------------------------------------------------------------------
+SENTRY_DSN=
+{% endif %}
 """
 
     with open(env_file_path, "w") as env_file:
