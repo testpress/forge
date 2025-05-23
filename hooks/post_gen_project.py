@@ -1,7 +1,8 @@
 import os
 import random
 import string
-
+import sys
+import subprocess
 
 def generate_secret_key():
     """Generate a random Django secret key."""
@@ -30,5 +31,26 @@ SENTRY_DSN=
         env_file.write(env_content)
 
 
-if __name__ == "__main__":
+def run_command(command):
+    """Run a shell command and exit if it fails."""
+    result = subprocess.run(command, shell=True)
+    if result.returncode != 0:
+        print(f"Command failed: {command}")
+        sys.exit(result.returncode)
+
+
+def setup_project():
+    print("Creating .env file...")
     create_env_file()
+
+    print("Installing dependencies with Poetry...")
+    run_command("poetry install")
+
+    print("Running makemigrations...")
+    run_command("poetry run python manage.py makemigrations")
+
+    print("Setup complete.")
+
+
+if __name__ == "__main__":
+    setup_project()
