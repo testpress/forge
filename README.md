@@ -12,11 +12,13 @@ A modern, well-structured Django project template that helps you quickly set up 
 - 📚 Documentation setup
 - 🌍 Localization support
 - 🛠️ Modular project structure
+- 📦 Poetry for dependency management
 
 ## Prerequisites
 
 - Python 3.12 or higher
 - [Cookiecutter](https://cookiecutter.readthedocs.io/) (`pip install cookiecutter`)
+- [Poetry](https://python-poetry.org/) for dependency management
 
 ## Usage
 
@@ -40,15 +42,14 @@ cookiecutter https://github.com/testpress/forge.git
 cd your_project_name
 ```
 
-4. Create and activate a virtual environment:
+4. Install dependencies using Poetry:
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+poetry install
 ```
 
-5. Install dependencies:
+5. Activate the Poetry shell:
 ```bash
-pip install -e ".[dev]"
+poetry shell
 ```
 
 6. Initialize git and install pre-commit hooks:
@@ -77,7 +78,8 @@ your_project_name/
 ├── locale/                 # Translation files
 ├── tests/                  # Test suite
 ├── manage.py              # Django management script
-└── pyproject.toml         # Project dependencies and tooling config
+├── pyproject.toml         # Project dependencies and tooling config
+└── poetry.lock           # Locked dependencies
 ```
 
 ## Development
@@ -86,6 +88,8 @@ your_project_name/
 - Format code: `black .` and `isort .`
 - Lint templates: `djlint .`
 - Check code quality: `pre-commit run --all-files`
+- Add new dependencies: `poetry add package-name`
+- Add development dependencies: `poetry add --group dev package-name`
 
 ## Optional Features
 
