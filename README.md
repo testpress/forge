@@ -13,12 +13,14 @@ A modern, well-structured Django project template that helps you quickly set up 
 - 🌍 Localization support
 - 🛠️ Modular project structure
 - 📦 Poetry for dependency management
+- 🔄 Optional WebSocket support with Django Channels
 
 ## Prerequisites
 
 - Python 3.12 or higher
 - [Cookiecutter](https://cookiecutter.readthedocs.io/) (`pip install cookiecutter`)
 - [Poetry](https://python-poetry.org/) for dependency management
+- Redis (if using Django Channels)
 
 ## Usage
 
@@ -35,7 +37,10 @@ cookiecutter https://github.com/testpress/forge.git
    - Email
    - Version
    - License
-   - Optional integrations (Preline UI components, Sentry)
+   - Optional integrations:
+     - Preline UI components
+     - Sentry error tracking
+     - Django Channels for WebSocket support
 
 3. Navigate to your new project directory:
 ```bash
@@ -98,6 +103,19 @@ If you selected "y" for `use_preline`, the template includes Preline UI componen
 
 ### Sentry Integration
 If you selected "y" for `use_sentry`, the template includes Sentry configuration for error tracking and monitoring.
+
+### Django Channels
+If you selected "y" for `use_channels`, the template includes:
+- Django Channels for WebSocket support
+- Redis channel layer configuration
+- ASGI application setup
+- Example WebSocket consumer structure
+
+To use WebSockets:
+1. Make sure Redis is running on localhost:6379
+2. Add your WebSocket consumers in `app/consumers.py`
+3. Configure WebSocket routing in `config/asgi.py`
+4. Run the server with Daphne: `daphne config.asgi:application`
 
 ## Contributing
 

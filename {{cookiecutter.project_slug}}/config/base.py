@@ -45,11 +45,23 @@ DJANGO_APPS = [
     "django.contrib.staticfiles",
 ]
 
-
 THIRD_PARTY_APPS = [
     "widget_tweaks",
     "django_extensions",
 ]
+
+{% if cookiecutter.use_channels == "y" %}
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
+}
+
+ASGI_APPLICATION = "config.asgi.application"
+{% endif %}
 
 INSTALLED_APPS = LOCAL_APPS + DJANGO_APPS + THIRD_PARTY_APPS
 

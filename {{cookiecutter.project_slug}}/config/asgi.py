@@ -11,6 +11,22 @@ import os
 
 from django.core.asgi import get_asgi_application
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.production")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.local")
 
+{% if cookiecutter.use_channels == "y" %}
+from channels.routing import ProtocolTypeRouter, URLRouter
+from channels.auth import AuthMiddlewareStack
+from django.urls import path
+
+application = ProtocolTypeRouter({
+    "http": get_asgi_application(),
+    # Add your WebSocket URL patterns here
+    # "websocket": AuthMiddlewareStack(
+    #     URLRouter([
+    #         # path("ws/some_path/", YourConsumer.as_asgi()),
+    #     ])
+    # ),
+})
+{% else %}
 application = get_asgi_application()
+{% endif %}

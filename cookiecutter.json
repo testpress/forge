@@ -13,5 +13,6 @@
     "Not open source"
   ],
   "use_preline": "n",
-  "use_sentry": "n"
+  "use_sentry": "n",
+  "use_channels": "n"
 }

@@ -22,6 +22,12 @@ ipython = "8.26.0"
 django-safedelete = "1.4.0"
 pillow = "10.4.0"
 
+# Optional Channels
+{% if cookiecutter.use_channels == "y" %}
+channels = "4.2.2"
+channels-redis = "4.2.1"
+daphne = "4.2.0"
+{% endif %}
 
 # Optional Sentry
 {% if cookiecutter.use_sentry == "y" %}
