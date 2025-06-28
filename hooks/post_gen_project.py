@@ -25,6 +25,13 @@ ALLOWED_HOSTS=localhost,127.0.0.1
 # ------------------------------------------------------------------------------
 SENTRY_DSN=
 {% endif %}
+{% if cookiecutter.use_fastapi == 'y' %}
+# FastAPI
+# ------------------------------------------------------------------------------
+FASTAPI_SECRET_KEY={secret_key}
+FASTAPI_HOST=0.0.0.0
+FASTAPI_PORT=8001
+{% endif %}
 """
 
     with open(env_file_path, "w") as env_file:
@@ -48,6 +55,12 @@ def setup_project():
 
     print("Running makemigrations...")
     run_command("uv run python manage.py makemigrations")
+
+    {% if cookiecutter.use_fastapi == 'y' %}
+    print("FastAPI integration enabled!")
+    print("To run the FastAPI server: uv run uvicorn api:app --reload")
+    print("API documentation will be available at: http://localhost:8001/docs")
+    {% endif %}
 
     print("Setup complete.")
 

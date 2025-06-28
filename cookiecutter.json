@@ -14,5 +14,6 @@
   ],
   "use_preline": "n",
   "use_sentry": "n",
-  "use_channels": "n"
+  "use_channels": "n",
+  "use_fastapi": "n"
 }
