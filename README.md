@@ -12,14 +12,14 @@ A modern, well-structured Django project template that helps you quickly set up 
 - 📚 Documentation setup
 - 🌍 Localization support
 - 🛠️ Modular project structure
-- 📦 Poetry for dependency management
+- 📦 uv for dependency management
 - 🔄 Optional WebSocket support with Django Channels
 
 ## Prerequisites
 
 - Python 3.12 or higher
 - [Cookiecutter](https://cookiecutter.readthedocs.io/) (`pip install cookiecutter`)
-- [Poetry](https://python-poetry.org/) for dependency management
+- [uv](https://docs.astral.sh/uv/) for dependency management
 - Redis (if using Django Channels)
 
 ## Usage
@@ -47,30 +47,25 @@ cookiecutter https://github.com/testpress/forge.git
 cd your_project_name
 ```
 
-4. Install dependencies using Poetry:
+4. Install dependencies using uv:
 ```bash
-poetry install
+uv sync
 ```
 
-5. Activate the Poetry shell:
-```bash
-poetry shell
-```
-
-6. Initialize git and install pre-commit hooks:
+5. Initialize git and install pre-commit hooks:
 ```bash
 git init
 pre-commit install
 ```
 
-7. Run migrations:
+6. Run migrations:
 ```bash
-python manage.py migrate
+uv run python manage.py migrate
 ```
 
-8. Start the development server:
+7. Start the development server:
 ```bash
-python manage.py runserver
+uv run python manage.py runserver
 ```
 
 ## Project Structure
@@ -84,17 +79,17 @@ your_project_name/
 ├── tests/                  # Test suite
 ├── manage.py              # Django management script
 ├── pyproject.toml         # Project dependencies and tooling config
-└── poetry.lock           # Locked dependencies
+└── uv.lock               # Locked dependencies
 ```
 
 ## Development
 
-- Run tests: `pytest`
-- Format code: `black .` and `isort .`
-- Lint templates: `djlint .`
+- Run tests: `uv run pytest`
+- Format code: `uv run black .` and `uv run isort .`
+- Lint templates: `uv run djlint .`
 - Check code quality: `pre-commit run --all-files`
-- Add new dependencies: `poetry add package-name`
-- Add development dependencies: `poetry add --group dev package-name`
+- Add new dependencies: `uv add package-name`
+- Add development dependencies: `uv add --dev package-name`
 
 ## Optional Features
 
@@ -115,7 +110,7 @@ To use WebSockets:
 1. Make sure Redis is running on localhost:6379
 2. Add your WebSocket consumers in `app/consumers.py`
 3. Configure WebSocket routing in `config/asgi.py`
-4. Run the server with Daphne: `daphne config.asgi:application`
+4. Run the server with Daphne: `uv run daphne config.asgi:application`
 
 ## Contributing
 

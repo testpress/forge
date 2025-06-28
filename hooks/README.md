@@ -17,10 +17,10 @@ Ensure the following tools are installed:
   pip install cookiecutter
   ```
 
-* [Poetry](https://python-poetry.org/docs/#installation) (if using Poetry in the template):
+* [uv](https://docs.astral.sh/uv/getting-started/installation/) for dependency management:
 
   ```bash
-  curl -sSL https://install.python-poetry.org | python3 -
+  curl -LsSf https://astral.sh/uv/install.sh | sh
   ```
 
 ---
@@ -50,13 +50,13 @@ You'll be prompted to enter details like:
 
 ---
 
-### What’s Generated
+### What's Generated
 
 The template will create:
 
 * A full Django project
 * `.env` file with generated secret key
-* `pyproject.toml` if Poetry is enabled
+* `pyproject.toml` with uv-compatible configuration
 * Optional integrations (e.g., Sentry) based on input
 * `README.md` for setup instructions
 
@@ -73,13 +73,13 @@ The template will create:
 2. **Apply migrations**:
 
    ```bash
-   poetry run python manage.py migrate
+   uv run python manage.py migrate
    ```
 
 3. **Run development server**:
 
    ```bash
-   poetry run python manage.py runserver
+   uv run python manage.py runserver
    ```
 ---
 
@@ -93,7 +93,7 @@ The template will create:
 ### Running Tests
 
 ```bash
-poetry run pytest
+uv run pytest
 ```
 
 ---

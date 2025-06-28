@@ -43,11 +43,11 @@ def setup_project():
     print("Creating .env file...")
     create_env_file()
 
-    print("Installing dependencies with Poetry...")
-    run_command("poetry install")
+    print("Installing dependencies with uv...")
+    run_command("uv sync")
 
     print("Running makemigrations...")
-    run_command("poetry run python manage.py makemigrations")
+    run_command("uv run python manage.py makemigrations")
 
     print("Setup complete.")
 

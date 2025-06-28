@@ -1,60 +1,58 @@
-[tool.poetry]
+[project]
 name = "{{ cookiecutter.project_slug }}"
 version = "0.1.0"
 description = ""
-authors = ["{{ cookiecutter.author_name  }} <{{ cookiecutter.email }}>"]
-license = "MIT"
+authors = [
+    {name = "{{ cookiecutter.author_name  }}", email = "{{ cookiecutter.email }}"}
+]
+license = {text = "MIT"}
 readme = "README.md"
-packages = [{ include = "app" }]
-package-mode = false
+requires-python = ">=3.11"
+dependencies = [
+    # Core Django & dependencies
+    "Django==5.1.7",
+    "django-environ==0.11.2",
+    "django-extensions==3.2.3",
+    "django-model-utils==4.5.1",
+    "django-widget-tweaks==1.5.0",
+    "django-simple-history==3.7.0",
+    "ipython==8.26.0",
+    "django-safedelete==1.4.0",
+    "pillow==10.4.0",
+    {% if cookiecutter.use_channels == "y" %}
+    # Optional Channels
+    "channels==4.2.2",
+    "channels-redis==4.2.1",
+    "daphne==4.2.0",
+    {% endif %}
+    {% if cookiecutter.use_sentry == "y" %}
+    # Optional Sentry
+    "sentry-sdk==2.20.0",
+    {% endif %}
+]
 
-[tool.poetry.dependencies]
-python = "^3.11"
-
-# Core Django & dependencies
-Django = "5.1.7"
-django-environ = "0.11.2"
-django-extensions = "3.2.3"
-django-model-utils = "4.5.1"
-django-widget-tweaks = "1.5.0"
-django-simple-history = "3.7.0"
-ipython = "8.26.0"
-django-safedelete = "1.4.0"
-pillow = "10.4.0"
-
-# Optional Channels
-{% if cookiecutter.use_channels == "y" %}
-channels = "4.2.2"
-channels-redis = "4.2.1"
-daphne = "4.2.0"
-{% endif %}
-
-# Optional Sentry
-{% if cookiecutter.use_sentry == "y" %}
-sentry-sdk = "2.20.0"
-{% endif %}
-
-[tool.poetry.group.dev.dependencies]
-# Development & testing tools
-coverage = "7.6.1"
-django-coverage-plugin = "3.1.0"
-django-debug-toolbar = "4.4.6"
-django-stubs = "5.0.4"
-mypy = "1.11.1"
-
-pre-commit = "3.8.0"
-pytest = "8.3.2"
-pytest-cov = "5.0.0"
-pytest-django = "4.8.0"
-pytest-sugar = "1.0.0"
-ruff = "*"
-djlint = "*"
-black = "*"
-isort = "*"
+[project.optional-dependencies]
+dev = [
+    # Development & testing tools
+    "coverage==7.6.1",
+    "django-coverage-plugin==3.1.0",
+    "django-debug-toolbar==4.4.6",
+    "django-stubs==5.0.4",
+    "mypy==1.11.1",
+    "pre-commit==3.8.0",
+    "pytest==8.3.2",
+    "pytest-cov==5.0.0",
+    "pytest-django==4.8.0",
+    "pytest-sugar==1.0.0",
+    "ruff",
+    "djlint",
+    "black",
+    "isort",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 # ==== pytest ====
 [tool.pytest.ini_options]
