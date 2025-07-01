@@ -38,7 +38,7 @@ from app.api.main import app as fastapi_app
 main_app = FastAPI()
 main_app.mount(
     "/static",
-    StaticFiles(directory=str(settings.BASE_DIR / "app" / "static")),
+    StaticFiles(directory=settings.BASE_DIR / "staticfiles"),
     name="static",
 )
 main_app.mount("/api", fastapi_app)
