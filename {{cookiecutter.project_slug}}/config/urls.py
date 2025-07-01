@@ -19,9 +19,11 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path
+from app.views.ping import trigger_ping_task
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("ping-task/", trigger_ping_task, name="ping-task"),
 ]
 
 if settings.DEBUG:

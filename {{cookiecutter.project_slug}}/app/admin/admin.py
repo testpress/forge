@@ -1,4 +1,4 @@
-# Register your models here.
+from app import admin
 from app.models import (
     BackgroundTask,
     BackgroundTaskEvent,
