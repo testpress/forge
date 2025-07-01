@@ -10,6 +10,7 @@ from fastapi.openapi.utils import get_openapi
 
 from .routers import auth, users, health
 from config.fastapi import settings
+from .middleware.cors import get_cors_config
 
 # Create FastAPI app instance
 app = FastAPI(
@@ -21,13 +22,7 @@ app = FastAPI(
 )
 
 # Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.BACKEND_CORS_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app.add_middleware(CORSMiddleware, **get_cors_config())
 
 # Include routers
 app.include_router(health.router, prefix="/api/v1", tags=["health"])
