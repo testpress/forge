@@ -16,8 +16,11 @@ from app.models import (
 )
 
 def attach_file_to_task(task_id, file_obj, description=""):
-    task = BackgroundTask.objects.get(task_id=task_id)
-    BackgroundTaskFile.objects.create(task=task, file=file_obj, description=description)
+    try:
+        task = BackgroundTask.objects.get(task_id=task_id)
+        BackgroundTaskFile.objects.create(task=task, file=file_obj, description=description)
+    except BackgroundTask.DoesNotExist:
+        pass
 
 def log_progress(task_id, message):
     try:

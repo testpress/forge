@@ -1,4 +1,4 @@
-from app import admin
+from django.contrib import admin
 from app.models import (
     BackgroundTask,
     BackgroundTaskEvent,
