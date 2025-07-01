@@ -9,20 +9,21 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 
 from .routers import auth, users, health
+from config.fastapi import settings
 
 # Create FastAPI app instance
 app = FastAPI(
-    title="{{ cookiecutter.project_name }} API",
-    description="{{ cookiecutter.description }}",
-    version="{{ cookiecutter.version }}",
-    docs_url="/docs",
-    redoc_url="/redoc",
+    title=settings.PROJECT_NAME,
+    description=settings.DESCRIPTION,
+    version=settings.VERSION,
+    docs_url=settings.DOCS_URL,
+    redoc_url=settings.REDOC_URL,
 )
 
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8000", "http://127.0.0.1:8000"],
+    allow_origins=settings.BACKEND_CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -40,9 +41,9 @@ def custom_openapi():
         return app.openapi_schema
     
     openapi_schema = get_openapi(
-        title="{{ cookiecutter.project_name }} API",
-        version="{{ cookiecutter.version }}",
-        description="{{ cookiecutter.description }}",
+        title=settings.PROJECT_NAME + " API",
+        version=settings.VERSION,
+        description=settings.DESCRIPTION,
         routes=app.routes,
     )
     
@@ -57,7 +58,7 @@ app.openapi = custom_openapi
 async def root():
     """Root endpoint."""
     return {
-        "message": "Welcome to {{ cookiecutter.project_name }} API",
-        "docs": "/docs",
-        "redoc": "/redoc",
+        "message": f"Welcome to {settings.PROJECT_NAME} API",
+        "docs": settings.DOCS_URL,
+        "redoc": settings.REDOC_URL,
     } 
