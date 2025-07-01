@@ -51,7 +51,7 @@ def setup_project():
     create_env_file()
 
     print("Installing dependencies with uv...")
-    run_command("uv sync")
+    run_command("uv sync --extra dev")
 
     print("Running makemigrations...")
     run_command("uv run python manage.py makemigrations")
