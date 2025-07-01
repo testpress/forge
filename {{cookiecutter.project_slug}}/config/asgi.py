@@ -28,5 +28,21 @@ application = ProtocolTypeRouter({
     # ),
 })
 {% else %}
-application = get_asgi_application()
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+
+django_app = get_asgi_application()
+from django.conf import settings
+from app.api.main import app as fastapi_app
+
+main_app = FastAPI()
+main_app.mount(
+    "/static",
+    StaticFiles(directory=str(settings.BASE_DIR / "app" / "static")),
+    name="static",
+)
+main_app.mount("/api", fastapi_app)
+main_app.mount("/", django_app)
+
+application = main_app
 {% endif %}
