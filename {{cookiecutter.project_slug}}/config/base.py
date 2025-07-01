@@ -153,3 +153,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # User model
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-user-model
 AUTH_USER_MODEL = "app.User"
+
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://localhost:6379/0")
+CELERY_TASK_TRACK_STARTED = True
