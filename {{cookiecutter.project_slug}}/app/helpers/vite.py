@@ -41,9 +41,9 @@ def vite_static(path: str) -> str:
     Production: Returns {STATIC_URL}{hashed_file} from manifest.json
     
     Usage:
-        {% load vite %}
+        {% raw %}{% load vite %}
         <link rel="stylesheet" href="{% vite_static 'css/styles.css' %}" />
-        <script type="module" src="{% vite_static 'js/main.js' %}"></script>
+        <script type="module" src="{% vite_static 'js/main.js' %}"></script>{% endraw %}
     
     Note: Path must match exactly as it appears in Vite's manifest.json
     """
