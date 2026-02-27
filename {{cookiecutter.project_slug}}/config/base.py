@@ -145,6 +145,14 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+STATICFILES_DIRS = [
+    BASE_DIR / "app/static/dist",
+]
+
+VITE_DEV_SERVER_URL = "http://localhost:5173"
+
+VITE_MANIFEST_PATH = "app/static/dist/.vite/manifest.json"
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
