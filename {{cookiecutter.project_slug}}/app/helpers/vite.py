@@ -32,23 +32,26 @@ def load_manifest() -> dict[str, dict[str, str]]:
         return cast(dict[str, dict[str, str]], data)
 
 
-@register.simple_tag
-def vite_static(path: str) -> str:
+@register.simple_tag(takes_context=True)
+def vite_static(context: Any, path: str, mode: str = "auto") -> str:
     """
-    Load Vite assets dynamically based on environment.
-    
-    Development: Returns http://localhost:5173/{path}
-    Production: Returns {STATIC_URL}{hashed_file} from manifest.json
+    Load Vite assets dynamically based on environment and mode.
     
     Usage:
-        {% raw %}{% load vite %}
-        <link rel="stylesheet" href="{% vite_static 'css/styles.css' %}" />
-        <script type="module" src="{% vite_static 'js/main.js' %}"></script>{% endraw %}
-    
-    Note: Path must match exactly as it appears in Vite's manifest.json
+        {% raw %}{% vite_static 'css/styles.css' %}
+        {% vite_static 'css/pdf.css' %}{% endraw %}
+    Python-side: pass 'vite_mode': 'pdf' or 'web' into render context
     """
+
+    def get_mode() -> str:
+        if mode != "auto":
+            return mode
+        return context.get("vite_mode", "dev" if is_vite_dev() else "web")
+
+    current_mode = get_mode()
+
     # Development: use Vite dev server
-    if is_vite_dev():
+    if current_mode == "dev":
         return f"{VITE_DEV_SERVER}/{path}"
 
     # Production: read from manifest
@@ -63,5 +66,9 @@ def vite_static(path: str) -> str:
         )
         raise KeyError(msg)
 
-    # Return full static URL with hashed filename
+    # For PDF mode, return relative path (WeasyPrint uses base_url for resolution)
+    if current_mode == "pdf":
+        return hashed["file"]
+
+    # For web mode, return full static URL with STATIC_URL prefix
     return f"{settings.STATIC_URL}{hashed['file']}"
