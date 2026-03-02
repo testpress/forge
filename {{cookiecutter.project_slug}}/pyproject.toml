@@ -40,8 +40,6 @@ dependencies = [
     {% endif %}
     "celery==5.4.0",
     "redis==5.2.1",
-    "weasyprint>=67.0",
-    "cssselect2",
 ]
 
 [project.optional-dependencies]
@@ -276,5 +274,3 @@ indent_size = 2
 
 [tool.djlint.js]
 indent_size = 2
-[tool.uv.sources]
-cssselect2 = { git = "https://github.com/Kozea/cssselect2.git", rev = "df793242e5abc98f0858d59b5aa2a5c42fb04ff6" }

@@ -19,14 +19,8 @@ export default defineConfig({
     manifest: true, // Generate manifest.json for asset mapping
     rollupOptions: {
       input: {
-        styles: resolve(__dirname, 'css/styles.css'), // Regular styles
-        pdf: resolve(__dirname, 'css/pdf.css'), // PDF-specific styles
+        styles: resolve(__dirname, 'css/styles.css'), // Entry point for your CSS
         main: resolve(__dirname, 'js/main.js'), // Entry point for your JS
-      },
-      output: {
-        assetFileNames: '[name]-[hash][extname]',
-        chunkFileNames: '[name]-[hash].js',
-        entryFileNames: '[name]-[hash].js',
       },
     },
   },
