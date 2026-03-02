@@ -1,4 +1,4 @@
-{% raw %}{% load static i18n %}
+{% raw %}{% load static i18n vite %}
 
 <!DOCTYPE html>
 {% get_current_language as LANGUAGE_CODE %}
@@ -23,15 +23,8 @@
     <!-- prettier-ignore -->
     {% block extra_head %}
     {% endblock extra_head %}
-    {% if debug %}
-      <!-- Development: Load styles and scripts from Vite server -->
-      {# djlint:off H022 #}
-      <link rel="stylesheet" href="http://localhost:5173/css/styles.css" />
-      {# djlint:on #}
-    {% else %}
-      <!-- Production: Load built styles and scripts -->
-      <link rel="stylesheet" href="{% static 'dist/css/styles.css' %}" />
-    {% endif %}
+    <!-- Load CSS from Vite (dev server in development, built files in production) -->
+    <link rel="stylesheet" href="{% vite_static 'css/styles.css' %}" />
     <script defer
             src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://unpkg.com/htmx.org@2.0.2"></script>
@@ -51,11 +44,8 @@
         {% endblock footer %}
       </footer>
     {% endblock body %}
-    {% if debug %}
-      <script type="module" src="http://localhost:5173/js/main.js"></script>
-    {% else %}
-      <script type="module" src="{% static 'dist/js/main.js' %}"></script>
-    {% endif %}
+    <!-- Load main JS from Vite (dev server in development, built files in production) -->
+    <script type="module" src="{% vite_static 'js/main.js' %}"></script>
     <!-- prettier-ignore -->
     {% block extra_scripts %}
     {% endblock extra_scripts %}

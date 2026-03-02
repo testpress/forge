@@ -16,6 +16,7 @@ export default defineConfig({
   build: {
     outDir: resolve(__dirname, 'dist'), // Output directory for build
     emptyOutDir: true,
+    manifest: true, // Generate manifest.json for asset mapping
     rollupOptions: {
       input: {
         styles: resolve(__dirname, 'css/styles.css'), // Entry point for your CSS
