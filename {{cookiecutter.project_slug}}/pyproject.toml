@@ -7,17 +7,17 @@ authors = [
 ]
 license = {text = "MIT"}
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     # Core Django & dependencies
-    "Django==5.1.7",
-    "django-environ==0.11.2",
-    "django-extensions==3.2.3",
-    "django-model-utils==4.5.1",
-    "django-widget-tweaks==1.5.0",
-    "django-simple-history==3.7.0",
+    "Django==5.2.16",
+    "django-environ==0.14.0",
+    "django-extensions==4.1",
+    "django-model-utils==5.0.0",
+    "django-widget-tweaks==1.5.1",
+    "django-simple-history==3.12.0",
     "ipython==8.26.0",
-    "django-safedelete==1.4.0",
+    "django-safedelete==1.4.1",
     "pillow==10.4.0",
     {% if cookiecutter.use_channels == "y" %}
     # Optional Channels
@@ -47,8 +47,8 @@ dev = [
     # Development & testing tools
     "coverage==7.6.1",
     "django-coverage-plugin==3.1.0",
-    "django-debug-toolbar==4.4.6",
-    "django-stubs==5.0.4",
+    "django-debug-toolbar==7.0.0",
+    "django-stubs==5.2.9",
     "mypy==1.11.1",
     "pre-commit==3.8.0",
     "pytest==8.3.3",
