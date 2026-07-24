@@ -1,8 +1,27 @@
 import os
 import random
+import shutil
 import string
 import sys
 import subprocess
+
+
+def remove_path(path):
+    """Remove a file or directory tree if it exists."""
+    if os.path.isdir(path):
+        shutil.rmtree(path)
+    elif os.path.isfile(path):
+        os.remove(path)
+
+
+def remove_fastapi_test_files():
+    """Drop FastAPI-only test files when FastAPI integration is disabled.
+
+    Their imports (fastapi, app.api) are unavailable in a non-FastAPI
+    project, so leaving them breaks pytest collection.
+    """
+    for path in ("tests/conftest.py", "tests/test_fastapi.py", "tests/api"):
+        remove_path(path)
 
 def generate_secret_key():
     """Generate a random Django secret key."""
@@ -49,6 +68,11 @@ def run_command(command):
 def setup_project():
     print("Creating .env file...")
     create_env_file()
+
+    {% if cookiecutter.use_fastapi != 'y' %}
+    print("Removing FastAPI-only test files...")
+    remove_fastapi_test_files()
+    {% endif %}
 
     print("Installing dependencies with uv...")
     run_command("uv sync --extra dev")
