@@ -20,31 +20,11 @@ repos:
       - id: check-case-conflict
       - id: detect-private-key
 
-  - repo: https://github.com/asottile/pyupgrade
-    rev: v3.17.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.2
     hooks:
-      - id: pyupgrade
-        args: [--py312-plus]
-
-  - repo: https://github.com/PyCQA/autoflake
-    rev: v2.2.1
-    hooks:
-    -   id: autoflake
-        args: [--remove-all-unused-imports, --remove-unused-variables, --in-place, --recursive]
-
-  # Using this mirror lets us use mypyc-compiled black, which is about 2x faster
-  - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 24.8.0
-    hooks:
-      - id: black
+      - id: ruff
+        args: [--fix]
         exclude: '^{{cookiecutter\.project_slug}}/app/apps\.py$'
-
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.13.2
-    hooks:
-      - id: isort
-
-  - repo: https://github.com/PyCQA/flake8
-    rev: 7.1.1
-    hooks:
-      - id: flake8
+      - id: ruff-format
+        exclude: '^{{cookiecutter\.project_slug}}/app/apps\.py$'

@@ -6,7 +6,7 @@ A modern, well-structured Django project template that helps you quickly set up 
 
 - 🚀 Modern Django project structure
 - 🧪 Pytest for testing
-- 🎨 Code formatting with black and isort
+- 🎨 Code formatting and linting with ruff
 - 📝 Template linting with djLint
 - 🔍 Pre-commit hooks for code quality
 - 📚 Documentation setup
@@ -97,7 +97,7 @@ your_project_name/
 ## Development
 
 - Run tests: `uv run pytest`
-- Format code: `uv run black .` and `uv run isort .`
+- Format code: `uv run ruff format .` and `uv run ruff check --fix .`
 - Lint templates: `uv run djlint .`
 - Check code quality: `pre-commit run --all-files`
 - Add new dependencies: `uv add package-name`

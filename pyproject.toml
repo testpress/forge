@@ -16,21 +16,22 @@ norecursedirs = [
 ]
 
 
-# ==== black ====
-[tool.black]
+# ==== Ruff ====
+[tool.ruff]
 line-length = 79
-target-version = ['py312']
+target-version = "py312"
 
+[tool.ruff.lint]
+select = ["F", "E", "W", "C90", "I", "N", "UP", "B", "SIM"]
 
-# ==== isort ====
-[tool.isort]
-profile = "black"
-line_length = 79
-known_first_party = [
-    "tests",
-    "scripts",
-    "hooks",
-]
+[tool.ruff.lint.isort]
+known-first-party = ["tests", "scripts", "hooks"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
 
 
 # ==== djLint ====
