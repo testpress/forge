@@ -22,7 +22,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> TokenData:
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    
+
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
@@ -31,5 +31,5 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> TokenData:
         token_data = TokenData(username=username)
     except JWTError:
         raise credentials_exception
-    
-    return token_data 
+
+    return token_data

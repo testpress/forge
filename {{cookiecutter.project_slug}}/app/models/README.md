@@ -52,7 +52,7 @@ class User(BaseModel):
 
 - **Migrations**: Ensure you create and apply migrations after modifying or adding new models.
 - **Querying**: Use Django’s ORM to query models and interact with the database. Example:
-  
+
 ```python
 from app.models.user import User
 

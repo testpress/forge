@@ -36,7 +36,7 @@ async def get_user(user_id: int, current_user: dict = Depends(get_current_user))
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
-    
+
     return {
         "id": user_id,
         "username": "testuser",
@@ -69,7 +69,7 @@ async def update_user(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
-    
+
     return {
         "id": user_id,
         "username": user_update.username or "testuser",
@@ -87,5 +87,5 @@ async def delete_user(user_id: int, current_user: dict = Depends(get_current_use
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
-    
-    return None 
+
+    return None

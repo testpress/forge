@@ -36,15 +36,15 @@ def load_manifest() -> dict[str, dict[str, str]]:
 def vite_static(path: str) -> str:
     """
     Load Vite assets dynamically based on environment.
-    
+
     Development: Returns http://localhost:5173/{path}
     Production: Returns {STATIC_URL}{hashed_file} from manifest.json
-    
+
     Usage:
         {% raw %}{% load vite %}
         <link rel="stylesheet" href="{% vite_static 'css/styles.css' %}" />
         <script type="module" src="{% vite_static 'js/main.js' %}"></script>{% endraw %}
-    
+
     Note: Path must match exactly as it appears in Vite's manifest.json
     """
     # Development: use Vite dev server

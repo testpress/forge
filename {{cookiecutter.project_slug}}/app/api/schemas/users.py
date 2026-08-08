@@ -30,4 +30,4 @@ class User(UserBase):
 
     class Config:
         """Pydantic configuration."""
-        from_attributes = True 
+        from_attributes = True

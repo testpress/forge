@@ -34,14 +34,14 @@ def custom_openapi():
     """Custom OpenAPI schema configuration."""
     if app.openapi_schema:
         return app.openapi_schema
-    
+
     openapi_schema = get_openapi(
         title=settings.PROJECT_NAME + " API",
         version=settings.VERSION,
         description=settings.DESCRIPTION,
         routes=app.routes,
     )
-    
+
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
@@ -56,4 +56,4 @@ async def root():
         "message": f"Welcome to {settings.PROJECT_NAME} API",
         "docs": settings.DOCS_URL,
         "redoc": settings.REDOC_URL,
-    } 
+    }

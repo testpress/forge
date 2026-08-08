@@ -78,4 +78,4 @@ def test_redoc_endpoint():
 {% else %}
 # FastAPI tests are skipped when FastAPI is not enabled
 pytest.skip("FastAPI not enabled", allow_module_level=True)
-{% endif %} 
+{% endif %}

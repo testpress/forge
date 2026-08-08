@@ -1,1 +1,1 @@
-# FastAPI dependencies package 
+# FastAPI dependencies package

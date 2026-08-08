@@ -19,4 +19,4 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     """Schema for token data."""
-    username: str | None = None 
+    username: str | None = None

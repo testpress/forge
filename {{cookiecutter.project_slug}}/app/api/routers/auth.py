@@ -59,7 +59,7 @@ async def login(user_credentials: UserLogin):
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user_credentials.username}, expires_delta=access_token_expires
@@ -70,4 +70,4 @@ async def login(user_credentials: UserLogin):
 @router.get("/me", response_model=TokenData)
 async def read_users_me(current_user: TokenData = Depends(get_current_user)):
     """Get current user information."""
-    return current_user 
+    return current_user

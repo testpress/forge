@@ -23,4 +23,4 @@ class PaginatedResponse(BaseModel):
     total: int
     page: int
     size: int
-    pages: int 
+    pages: int
