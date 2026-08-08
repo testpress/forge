@@ -18,7 +18,9 @@ dependencies = [
     "django-simple-history==3.12.0",
     "ipython==8.26.0",
     "django-safedelete==1.4.1",
-    "pillow==10.4.0",
+    "pillow==12.3.0",
+    "psycopg[binary]==3.3.4",
+    "gunicorn==26.0.0",
     {% if cookiecutter.use_channels == "y" %}
     # Optional Channels
     "channels==4.2.2",
@@ -59,6 +61,7 @@ dev = [
     "djlint",
     "pytest-mock==3.14.1",
     "factory-boy==3.3.3",
+    "types-factory-boy==0.4.1",
     "faker==37.3.0",
     "pytest-xdist==3.7.0",
     "pytest-env==1.1.5",
@@ -134,7 +137,7 @@ exclude = [
     "node_modules",
     "site-packages",
     "venv",
-    "app/migrations/*.py",
+    "app/db/migrations/*.py",
     "app/static/*"
 ]
 
@@ -204,10 +207,13 @@ select = [
   "RUF"
 ]
 ignore = [
-  "UP038" # Checks for uses of isinstance/issubclass that take a tuple
-          # of types for comparison.
-          # Deactivated because it can make the code slow:
-          # https://github.com/astral-sh/ruff/issues/7871
+  "UP038", # Checks for uses of isinstance/issubclass that take a tuple
+           # of types for comparison.
+           # Deactivated because it can make the code slow:
+           # https://github.com/astral-sh/ruff/issues/7871
+  "COM812" # Trailing comma handling is already owned by the formatter
+           # (see [tool.ruff.format] below); keeping this rule selected
+           # too causes the two to fight each other on every save.
 ]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
@@ -216,6 +222,19 @@ unfixable = []
 
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.lint.per-file-ignores]
+# Tests routinely use bare asserts, inline literals like `== 200`, and
+# compare against literal auth values like token_type "bearer" - that's
+# expected pytest style, not a real security/readability issue.
+"tests/**" = ["S101", "PLR2004", "S105"]
+# FastAPI's dependency-injection pattern requires calling Depends() as
+# an argument default; that's idiomatic FastAPI, not a bug.
+"app/api/**" = ["B008"]
+# Root-level entry point script, not a package module.
+"api.py" = ["INP001"]
+# Deliberately commented-out example routing left for users to uncomment.
+"config/asgi.py" = ["ERA001"]
 
 [tool.ruff.format]
 # Like Black, use double quotes for strings.

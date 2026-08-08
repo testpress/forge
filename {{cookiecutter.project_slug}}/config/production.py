@@ -1,5 +1,5 @@
-# ruff: noqa: E501
 from .base import *  # noqa: F403
+
 {% if cookiecutter.use_sentry == 'y' -%}
 import logging
 
@@ -19,7 +19,7 @@ LOGGING = {
     "disable_existing_loggers": True,
     "formatters": {
         "verbose": {
-            "format": "%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s",
+            "format": "%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s",  # noqa: E501
         },
     },
     "handlers": {

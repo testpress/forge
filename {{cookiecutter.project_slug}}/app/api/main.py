@@ -8,9 +8,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 
-from .routers import auth, users, health
 from config.fastapi import settings
+
 from .middleware.cors import get_cors_config
+from .routers import auth
+from .routers import health
+from .routers import users
 
 # Create FastAPI app instance
 app = FastAPI(

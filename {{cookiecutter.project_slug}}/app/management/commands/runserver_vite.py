@@ -3,6 +3,7 @@ import os
 import shutil
 import subprocess
 from pathlib import Path
+from typing import Any
 
 from django.contrib.staticfiles.management.commands.runserver import (
     Command as RunserverCommand,
@@ -15,7 +16,7 @@ logging.basicConfig(
 
 
 class Command(RunserverCommand):
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         # Check if this is the main server process, not the reloader
         if os.environ.get("RUN_MAIN") == "true":
             # If this is the reloader, just run the server without

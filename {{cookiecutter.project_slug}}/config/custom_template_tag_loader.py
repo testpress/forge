@@ -20,7 +20,7 @@ def get_custom_template_tag_modules(candidates):
 
         if hasattr(pkg, "__path__"):
             for name in get_package_libraries(pkg):
-                module_name = name[len(candidate) + 1 :]  # noqa: E203
+                module_name = name[len(candidate) + 1 :]
                 yield module_name, name
 
 

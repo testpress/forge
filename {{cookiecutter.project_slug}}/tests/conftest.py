@@ -8,9 +8,11 @@ from httpx import AsyncClient
 
 from app.api.main import app
 
-@pytest.fixture()
+
+@pytest.fixture
 def api_client() -> TestClient:
     return TestClient(app)
+
 
 @pytest_asyncio.fixture
 async def async_api_client() -> AsyncGenerator[AsyncClient, None]:

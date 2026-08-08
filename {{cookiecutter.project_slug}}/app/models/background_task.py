@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.db import models
+
 from app.models import BaseModel
+
 
 class TaskStatus(models.IntegerChoices):
     PENDING = 0, "Pending"
@@ -11,6 +13,7 @@ class TaskStatus(models.IntegerChoices):
     RETRY = 5, "Retry"
     REVOKED = 6, "Revoked"
 
+
 CELERY_STATE_MAP = {
     "PENDING": TaskStatus.PENDING,
     "RECEIVED": TaskStatus.RECEIVED,
@@ -20,6 +23,7 @@ CELERY_STATE_MAP = {
     "RETRY": TaskStatus.RETRY,
     "REVOKED": TaskStatus.REVOKED,
 }
+
 
 class BackgroundTask(BaseModel):
     task_id = models.CharField(max_length=255, unique=True)
@@ -38,7 +42,7 @@ class BackgroundTask(BaseModel):
     )
     started_at = models.DateTimeField(null=True, blank=True)
     finished_at = models.DateTimeField(null=True, blank=True)
-    exception = models.TextField(null=True, blank=True, max_length=5000)
+    exception = models.TextField(blank=True, max_length=5000)
 
     class Meta:
         ordering = ("-created",)
@@ -48,6 +52,7 @@ class BackgroundTask(BaseModel):
     def __str__(self):
         return f"{self.name} [{self.task_id}]"
 
+
 class EventType(models.IntegerChoices):
     RECEIVED = 1, "Received"
     STARTED = 2, "Started"
@@ -55,6 +60,7 @@ class EventType(models.IntegerChoices):
     FAILED = 4, "Failed"
     REVOKED = 5, "Revoked"
     PROGRESS = 6, "Progress"
+
 
 class BackgroundTaskEvent(BaseModel):
     task = models.ForeignKey(
@@ -66,7 +72,7 @@ class BackgroundTaskEvent(BaseModel):
         choices=EventType.choices,
         default=EventType.PROGRESS,
     )
-    message = models.TextField(null=True, blank=True, max_length=5000)
+    message = models.TextField(blank=True, max_length=5000)
 
     class Meta:
         ordering = ("-created",)
@@ -76,8 +82,10 @@ class BackgroundTaskEvent(BaseModel):
     def __str__(self):
         return f"{self.get_event_display()} - {self.task.name}"
 
+
 def background_task_upload_path(instance, filename: str) -> str:
     return f"background_tasks/{instance.task.task_id}/{filename}"
+
 
 class BackgroundTaskFile(BaseModel):
     task = models.ForeignKey(

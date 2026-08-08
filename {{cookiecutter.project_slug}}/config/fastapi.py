@@ -3,7 +3,7 @@ FastAPI settings configuration.
 """
 
 import os
-from typing import List
+from typing import ClassVar
 
 
 class FastAPISettings:
@@ -21,7 +21,7 @@ class FastAPISettings:
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
     # CORS
-    BACKEND_CORS_ORIGINS: List[str] = [
+    BACKEND_CORS_ORIGINS: ClassVar[list[str]] = [
         "http://localhost:8000",
         "http://127.0.0.1:8000",
         "http://localhost:3000",
@@ -36,7 +36,7 @@ class FastAPISettings:
     REDOC_URL: str = "/redoc"
 
     # Server
-    HOST: str = "0.0.0.0"
+    HOST: str = "0.0.0.0"  # noqa: S104 - intentional: must bind all interfaces in a container
     PORT: int = 8001
     RELOAD: bool = True
 

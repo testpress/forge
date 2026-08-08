@@ -2,6 +2,7 @@
 CORS middleware configuration for the API.
 """
 
+
 def get_cors_config():
     """Return CORS middleware configuration as dict."""
     return {

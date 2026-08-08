@@ -2,17 +2,20 @@
 User management endpoints for the API.
 """
 
-from typing import List
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import status
 
-from fastapi import APIRouter, Depends, HTTPException, status
-
-from ..schemas.users import User, UserCreate, UserUpdate
-from ..dependencies.auth import get_current_user
+from app.api.dependencies.auth import get_current_user
+from app.api.schemas.users import User
+from app.api.schemas.users import UserCreate
+from app.api.schemas.users import UserUpdate
 
 router = APIRouter()
 
 
-@router.get("/", response_model=List[User])
+@router.get("/", response_model=list[User])
 async def get_users(current_user: dict = Depends(get_current_user)):
     """Get all users."""
     # In a real application, you would query your Django user model
@@ -23,7 +26,7 @@ async def get_users(current_user: dict = Depends(get_current_user)):
             "username": "testuser",
             "email": "test@example.com",
             "is_active": True,
-        }
+        },
     ]
 
 
@@ -60,7 +63,9 @@ async def create_user(user: UserCreate):
 
 @router.put("/{user_id}", response_model=User)
 async def update_user(
-    user_id: int, user_update: UserUpdate, current_user: dict = Depends(get_current_user)
+    user_id: int,
+    user_update: UserUpdate,
+    current_user: dict = Depends(get_current_user),
 ):
     """Update a user."""
     # In a real application, you would update the user in your Django model
@@ -87,5 +92,3 @@ async def delete_user(user_id: int, current_user: dict = Depends(get_current_use
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
-
-    return None

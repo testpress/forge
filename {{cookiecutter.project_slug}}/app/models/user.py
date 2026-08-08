@@ -1,11 +1,15 @@
 from typing import ClassVar
 
-from app.models import BaseModel, Permission, Profile
 from django.conf import settings
-from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import BaseUserManager
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from safedelete.models import SafeDeleteManager
+
+from app.models import BaseModel
+from app.models import Permission
+from app.models import Profile
 
 
 class UserManager(BaseUserManager, SafeDeleteManager):
@@ -40,9 +44,7 @@ class UserManager(BaseUserManager, SafeDeleteManager):
 
 
 class UserPermission(BaseModel):
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE
-    )
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     permission = models.ForeignKey(Permission, on_delete=models.CASCADE)
 
     class Meta:
@@ -83,7 +85,7 @@ class User(AbstractUser, BaseModel):
     def get_all_permissions(self, obj=None):
         if self.is_superuser and self.is_active:
             return set(Permission.objects.values_list("codename", flat=True))
-        return self.get_user_permissions() | self.get_role_permissions()
+        return self.get_user_permissions()
 
     def has_perm(self, perm, obj=None):
         if self.is_superuser and self.is_active:
@@ -96,9 +98,7 @@ class User(AbstractUser, BaseModel):
     def has_module_perms(self, app_label):
         if self.is_superuser and self.is_active:
             return True
-        return any(
-            perm.startswith(app_label) for perm in self.get_all_permissions()
-        )
+        return any(perm.startswith(app_label) for perm in self.get_all_permissions())
 
     def add_perm(self, permission):
         UserPermission.objects.get_or_create(user=self, permission=permission)

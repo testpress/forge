@@ -65,6 +65,19 @@ def run_command(command):
         sys.exit(result.returncode)
 
 
+def run_command_best_effort(command):
+    """Run a shell command without failing setup if it reports issues.
+
+    djlint's --reformat exits non-zero whenever it changes (or can't fully
+    fix) a file, even though the run itself succeeded - that's expected on
+    first run, not a real error, so it must not abort project generation.
+    """
+    result = subprocess.run(command, shell=True)
+    if result.returncode != 0:
+        print(f"Note: '{command}' reported issues (exit {result.returncode}); "
+              "continuing anyway.")
+
+
 def setup_project():
     print("Creating .env file...")
     create_env_file()
@@ -76,6 +89,18 @@ def setup_project():
 
     print("Installing dependencies with uv...")
     run_command("uv sync --extra dev")
+
+    # Jinja conditionals (e.g. optional Sentry/FastAPI/Channels blocks, and
+    # the raw-block escaping templates need around Django template tags) can
+    # leave stray blank lines or unsorted imports behind depending on which
+    # options were chosen. Auto-fix and format so the project starts clean
+    # regardless of which flags were selected.
+    print("Formatting generated project with ruff...")
+    run_command_best_effort("uv run ruff check --fix .")
+    run_command_best_effort("uv run ruff format .")
+
+    print("Formatting templates with djlint...")
+    run_command_best_effort("uv run djlint . --reformat")
 
     print("Running makemigrations...")
     run_command("uv run python manage.py makemigrations")

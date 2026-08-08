@@ -2,7 +2,8 @@ import json
 import os
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
+from typing import cast
 
 from django import template
 from django.conf import settings
@@ -20,7 +21,9 @@ def is_vite_dev() -> bool:
 def load_manifest() -> dict[str, dict[str, str]]:
     base_dir = getattr(settings, "BASE_DIR", Path(__file__).resolve().parent.parent)
     manifest_path = base_dir / getattr(
-        settings, "VITE_MANIFEST_PATH", "app/static/dist/.vite/manifest.json"
+        settings,
+        "VITE_MANIFEST_PATH",
+        "app/static/dist/.vite/manifest.json",
     )
 
     if not manifest_path.exists():
@@ -29,7 +32,7 @@ def load_manifest() -> dict[str, dict[str, str]]:
 
     with manifest_path.open() as f:
         data: Any = json.load(f)
-        return cast(dict[str, dict[str, str]], data)
+        return cast("dict[str, dict[str, str]]", data)
 
 
 @register.simple_tag

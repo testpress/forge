@@ -2,6 +2,7 @@
 
 import pytest
 
+
 class BaseTestCase:
     @pytest.fixture(autouse=True)
     def _setup(self, db) -> None:
@@ -11,7 +12,8 @@ class BaseTestCase:
     def setup_additional(self) -> None:
         pass
 
-@pytest.mark.asyncio()
+
+@pytest.mark.asyncio
 class BaseFastAPITestCase:
     @pytest.fixture(autouse=True)
     def _setup(self, db, api_client, async_api_client) -> None:

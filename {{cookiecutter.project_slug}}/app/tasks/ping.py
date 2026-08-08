@@ -1,16 +1,22 @@
 import tempfile
 from pathlib import Path
+from typing import Any
+
 from celery import shared_task
 from django.core.files import File
-from app.domain.background_task import attach_file_to_task, log_progress
+
+from app.domain.background_task import attach_file_to_task
+from app.domain.background_task import log_progress
+
 
 @shared_task(bind=True)
-def ping(self):
+def ping(self: Any) -> str:
     log_progress(self.request.id, "Sending Pong")
     return "pong"
 
+
 @shared_task(bind=True)
-def generate_report(self):
+def generate_report(self: Any) -> str:
     log_progress(self.request.id, "Starting PDF generation")
 
     temp_dir = Path(tempfile.gettempdir())

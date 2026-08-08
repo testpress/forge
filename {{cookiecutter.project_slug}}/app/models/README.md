@@ -37,6 +37,7 @@ All models should inherit from `BaseModel`. Here’s an example of a basic model
 from django.db import models
 from app.models.base import BaseModel
 
+
 class User(BaseModel):
     name = models.CharField(max_length=255)
     email = models.EmailField(unique=True)

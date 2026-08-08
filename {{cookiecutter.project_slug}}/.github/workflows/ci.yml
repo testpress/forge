@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  # Dummy values - CI runs against SQLite, so these just need to be present,
+  # not valid credentials for a real database.
+  SECRET_KEY: ci-test-secret-key
+  DATABASE_URL: sqlite:///db.sqlite3
+  DJANGO_DEBUG: "False"
+  ALLOWED_HOSTS: localhost,127.0.0.1
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v9
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Ruff check
+        run: uv run ruff check .
+
+      - name: Ruff format check
+        run: uv run ruff format --check .
+
+      - name: djLint
+        run: uv run djlint . --check
+
+  typecheck:
+    runs-on: ubuntu-latest
+    # mypy is configured in strict mode, which the codebase does not fully
+    # satisfy yet (celery lacks type stubs, some model/form methods still
+    # need annotations). Reporting is useful, but it shouldn't block merges
+    # until that debt is paid down - remove continue-on-error once `mypy .`
+    # is clean.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v9
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: mypy
+        run: uv run mypy .
+
+  migrations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v9
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Check for missing migrations
+        run: uv run python manage.py makemigrations --check --dry-run
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v9
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Run tests
+        run: uv run pytest --cov --cov-report=term-missing
