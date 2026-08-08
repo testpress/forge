@@ -15,13 +15,15 @@ A modern, well-structured Django project template that helps you quickly set up 
 - 📦 uv for dependency management
 - 🔄 Optional WebSocket support with Django Channels
 - 🚀 Optional FastAPI integration for modern APIs
+- 🐳 Docker + docker-compose for local development (Postgres, Redis, Celery worker)
+- ✅ GitHub Actions CI (lint, type-check, migrations check, tests)
 
 ## Prerequisites
 
 - Python 3.12 or higher
 - [Cookiecutter](https://cookiecutter.readthedocs.io/) (`pip install cookiecutter`)
 - [uv](https://docs.astral.sh/uv/) for dependency management
-- Redis (if using Django Channels)
+- [Docker](https://docs.docker.com/get-docker/) and Docker Compose (optional, for the containerized dev setup)
 
 ## Usage
 
@@ -70,6 +72,18 @@ uv run python manage.py migrate
 uv run python manage.py runserver
 ```
 
+Alternatively, skip steps 4-7 and run everything (Django, Postgres, Redis, and
+a Celery worker) with Docker Compose instead:
+
+```bash
+cd your_project_name
+docker compose up --build
+```
+
+This serves the app at http://localhost:8000 with `config.local` settings and
+autoreload; source changes on the host are reflected immediately. See
+[Docker](#docker) below for details.
+
 ## Project Structure
 
 ```
@@ -85,11 +99,15 @@ your_project_name/
 │   ├── templates/         # Django templates
 │   └── static/            # Django static files
 ├── config/                # Project settings and configuration
+├── docker/                # Container entrypoint script
 ├── docs/                  # Documentation
 ├── locale/                # Translation files
 ├── tests/                 # Test suite
+├── .github/workflows/     # CI (ruff, mypy, djlint, migrations, pytest)
 ├── manage.py             # Django management script
 ├── api.py                # FastAPI entry point (if enabled)
+├── Dockerfile             # Multi-stage: dev (compose) and production targets
+├── docker-compose.yml     # Local dev stack: web, worker, Postgres, Redis
 ├── pyproject.toml        # Project dependencies and tooling config
 └── uv.lock              # Locked dependencies
 ```
@@ -102,6 +120,47 @@ your_project_name/
 - Check code quality: `pre-commit run --all-files`
 - Add new dependencies: `uv add package-name`
 - Add development dependencies: `uv add --dev package-name`
+
+## Docker
+
+`docker compose up --build` starts four services:
+
+| Service  | What it is |
+|----------|------------|
+| `web`    | Django dev server (`config.local`, `DEBUG=True`, autoreload via bind mount) on port 8000 |
+| `worker` | Celery worker, same image, no autoreload |
+| `db`     | Postgres 17 on port 5432 (credentials via `POSTGRES_*` env vars, default `postgres`/`postgres`) |
+| `redis`  | Redis 7 on port 6379 (Celery broker) |
+
+The image is a multi-stage `Dockerfile` with two targets:
+- `dev` (what `docker-compose.yml` builds) — installs dev dependencies too
+  (debug toolbar, pytest, ruff, ...) and runs `config.local`.
+- `production` (the default target for a plain `docker build .`, no
+  `--target` needed) — lean, no dev tooling, runs `config.production`{% if cookiecutter.use_channels == "y" %} via
+  `daphne`{% elif cookiecutter.use_fastapi == "y" %} via `uvicorn`{% else %} via `gunicorn`{% endif %}.
+
+Both targets share an entrypoint (`docker/entrypoint.sh`) that runs
+`migrate` and `collectstatic` before starting the server. The `worker`
+service skips this (it just needs the `web` service to have already
+migrated) so the two containers don't race to create the schema.
+
+To build a production image standalone:
+```bash
+docker build -t your_project_name .
+```
+
+## Continuous Integration
+
+Every generated project ships with `.github/workflows/ci.yml`, running on
+push/PR against `main` via `uv`:
+- **lint**: `ruff check`, `ruff format --check`, `djlint --check`
+- **typecheck**: `mypy .` (non-blocking — `continue-on-error: true` — until
+  the codebase is fully annotated; see the job's comment in the workflow)
+- **migrations**: `makemigrations --check --dry-run`
+- **test**: `pytest --cov`
+
+All of these run against SQLite with dummy credentials, so no services or
+secrets are required for CI to pass.
 
 ## Optional Features
 
@@ -147,6 +206,16 @@ To use FastAPI:
 - **Documentation**: Auto-generated OpenAPI documentation
 - **CORS**: Configured for frontend development
 - **Validation**: Pydantic schemas for all requests/responses
+
+> **Known rough edge:** the paths above (`/api/v1/...`) are correct when
+> running the FastAPI app standalone via `uvicorn api:app`. When served
+> through `config.asgi:application` (i.e. the Docker image, or
+> `daphne`/`uvicorn config.asgi:application` directly) with `use_channels`
+> disabled, `config/asgi.py` mounts the same app under an *additional*
+> `/api` prefix (`main_app.mount("/api", fastapi_app)`), so the real paths
+> there are `/api/api/v1/...`. This is a pre-existing quirk in how the
+> combined Django+FastAPI ASGI app is mounted, not something this CI/Docker
+> work introduced or fixed — worth cleaning up separately.
 
 ## Contributing
 

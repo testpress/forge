@@ -1,0 +1,108 @@
+name: Validate template
+
+# Bakes this cookiecutter template with several flag combinations and runs
+# the generated project's own quality gates against each one. This is what
+# actually catches "works with these flags but not those" bugs - the
+# per-project .github/workflows/ci.yml can only ever validate whichever
+# single combination a given generated project was created with.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  bake-and-validate:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: default
+            flags: ""
+          - name: fastapi
+            flags: "use_fastapi=y"
+          - name: channels
+            flags: "use_channels=y"
+          - name: sentry
+            flags: "use_sentry=y"
+    env:
+      SECRET_KEY: ci-test-secret-key
+      DATABASE_URL: sqlite:///db.sqlite3
+      ALLOWED_HOSTS: localhost,127.0.0.1
+      FASTAPI_SECRET_KEY: ci-test-secret-key
+      SENTRY_DSN: ""
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v9
+        with:
+          enable-cache: true
+
+      - name: Bake project (${{ matrix.name }})
+        run: uvx cookiecutter --no-input . project_name="Testproj" ${{ matrix.flags }}
+        # post_gen_project.py already runs `uv sync`, ruff, and djlint
+        # during generation - this step's exit code is the first signal
+        # that baking itself (including that setup) didn't fail outright.
+
+      - name: Ruff check
+        working-directory: testproj
+        run: uv run ruff check .
+
+      - name: Ruff format check
+        working-directory: testproj
+        run: uv run ruff format --check .
+
+      - name: djLint
+        working-directory: testproj
+        run: uv run djlint . --check
+
+      - name: Check for missing migrations
+        working-directory: testproj
+        run: uv run python manage.py makemigrations --check --dry-run
+
+      - name: Run tests
+        working-directory: testproj
+        run: uv run pytest
+
+      - name: Docker build (production target)
+        run: docker build -t testproj:ci testproj
+
+  docker-compose-smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v9
+        with:
+          enable-cache: true
+
+      - name: Bake default project
+        run: uvx cookiecutter --no-input . project_name="Testproj"
+
+      - name: Start the compose stack
+        working-directory: testproj
+        run: docker compose up -d --build
+
+      - name: Wait for web to come up
+        working-directory: testproj
+        run: |
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8000/admin/login/ >/dev/null && exit 0
+            sleep 2
+          done
+          echo "web never became reachable"
+          docker compose logs
+          exit 1
+
+      - name: Dump logs on failure
+        if: failure()
+        working-directory: testproj
+        run: docker compose logs
+
+      - name: Tear down
+        if: always()
+        working-directory: testproj
+        run: docker compose down -v

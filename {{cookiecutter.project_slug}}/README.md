@@ -33,6 +33,24 @@
    The API documentation will be available at: http://localhost:8001/docs
 {% endif %}
 
+## Docker
+
+Alternatively, run everything (this app, Postgres, Redis, and a Celery
+worker) with Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+The app is served at http://localhost:8000 with autoreload; edits on the
+host are picked up immediately. `docker compose down -v` tears it down and
+drops the Postgres volume.
+
+## Continuous Integration
+
+`.github/workflows/ci.yml` runs ruff, djlint, mypy, a Django migrations
+check, and pytest on every push/PR - see the file for details.
+
 ## License
 
 {{ cookiecutter.project_name }} is licensed under the {{ cookiecutter.open_source_license }} license.
