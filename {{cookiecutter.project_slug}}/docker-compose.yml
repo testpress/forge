@@ -1,3 +1,4 @@
+{% set needs_redis = cookiecutter.use_celery == 'y' or cookiecutter.use_channels == 'y' -%}
 services:
   db:
     image: postgres:17-alpine
@@ -14,7 +15,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-
+{% if needs_redis %}
   redis:
     image: redis:7-alpine
     ports:
@@ -24,7 +25,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-
+{% endif %}
   web:
     build:
       context: .
@@ -41,13 +42,17 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: config.local
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-{{ cookiecutter.project_slug }}}
+{%- if cookiecutter.use_celery == 'y' %}
       CELERY_BROKER_URL: redis://redis:6379/0
+{%- endif %}
     depends_on:
       db:
         condition: service_healthy
+{%- if needs_redis %}
       redis:
         condition: service_healthy
-
+{%- endif %}
+{% if cookiecutter.use_celery == 'y' %}
   worker:
     build:
       context: .
@@ -73,6 +78,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-
+{% endif %}
 volumes:
   postgres_data:

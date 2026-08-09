@@ -41,8 +41,11 @@ dependencies = [
     # through the WSGI/gunicorn path the plain template uses.
     "uvicorn[standard]==0.52.1",
     {% endif %}
-    "celery==5.4.0",
+    {% if cookiecutter.use_celery == "y" %}
+    # Optional background tasks
+    "celery==5.6.3",
     "redis==5.2.1",
+    {% endif %}
 ]
 
 [project.optional-dependencies]

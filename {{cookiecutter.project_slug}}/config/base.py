@@ -170,9 +170,13 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-user-model
 AUTH_USER_MODEL = "app.User"
 
+{% if cookiecutter.use_celery == "y" -%}
+# Celery
+# ------------------------------------------------------------------------------
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://localhost:6379/0")
 CELERY_TASK_TRACK_STARTED = True
+{%- endif %}
 
 {% if cookiecutter.use_django_ninja == "y" -%}
 # API
