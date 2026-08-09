@@ -19,12 +19,18 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path
-
+{% if cookiecutter.use_django_ninja == 'y' %}
+from app.api.urls import api
+{% endif %}
 from app.views.ping import trigger_ping_task
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("ping-task/", trigger_ping_task, name="ping-task"),
+{%- if cookiecutter.use_django_ninja == 'y' %}
+    # Serves the API plus its OpenAPI schema and Swagger UI at /api/docs.
+    path("api/", api.urls),
+{%- endif %}
 ]
 
 if settings.DEBUG:

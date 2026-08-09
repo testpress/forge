@@ -20,17 +20,20 @@ jobs:
         include:
           - name: default
             flags: ""
-          - name: fastapi
-            flags: "use_fastapi=y"
+          - name: django-ninja
+            flags: "use_django_ninja=y"
           - name: channels
             flags: "use_channels=y"
           - name: sentry
             flags: "use_sentry=y"
+          # The API must not conflict with Channels' ASGI application,
+          # which the old FastAPI mount did.
+          - name: ninja-channels
+            flags: "use_django_ninja=y use_channels=y"
     env:
       SECRET_KEY: ci-test-secret-key
       DATABASE_URL: sqlite:///db.sqlite3
       ALLOWED_HOSTS: localhost,127.0.0.1
-      FASTAPI_SECRET_KEY: ci-test-secret-key
       SENTRY_DSN: ""
     steps:
       - uses: actions/checkout@v7

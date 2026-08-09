@@ -48,6 +48,9 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = [
     "widget_tweaks",
     "django_extensions",
+{%- if cookiecutter.use_django_ninja == "y" %}
+    "corsheaders",
+{%- endif %}
 ]
 
 {% if cookiecutter.use_channels == "y" %}
@@ -69,6 +72,11 @@ MIGRATION_MODULES = {"app": "app.db.migrations"}
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+{%- if cookiecutter.use_django_ninja == "y" %}
+    # Must sit above CommonMiddleware so it can answer CORS preflight
+    # requests before anything else redirects or rejects them.
+    "corsheaders.middleware.CorsMiddleware",
+{%- endif %}
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -165,3 +173,19 @@ AUTH_USER_MODEL = "app.User"
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://localhost:6379/0")
 CELERY_TASK_TRACK_STARTED = True
+
+{% if cookiecutter.use_django_ninja == "y" -%}
+# API
+# ------------------------------------------------------------------------------
+# How long an issued bearer token stays valid, in seconds. Tokens are signed
+# with SECRET_KEY, so rotating SECRET_KEY revokes every outstanding token.
+API_TOKEN_MAX_AGE = env.int("API_TOKEN_MAX_AGE", default=60 * 60 * 24)
+
+# Origins allowed to call the API from a browser. Override per environment;
+# an empty list means same-origin requests only.
+CORS_ALLOWED_ORIGINS = env.list(
+    "CORS_ALLOWED_ORIGINS",
+    default=["http://localhost:3000", "http://127.0.0.1:3000"],
+)
+CORS_ALLOW_CREDENTIALS = True
+{%- endif %}

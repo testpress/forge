@@ -1,23 +1,23 @@
-from collections.abc import AsyncGenerator
+"""Fixtures for API tests.
+
+django-ninja ships its own test clients, which call operations directly
+without going through the URL resolver or an HTTP server - so these run at
+unit-test speed while still exercising routing, schema validation and the
+auth classes.
+"""
 
 import pytest
-import pytest_asyncio
-from fastapi.testclient import TestClient
-from httpx import ASGITransport
-from httpx import AsyncClient
+from ninja.testing import TestAsyncClient
+from ninja.testing import TestClient
 
-from app.api.main import app
+from app.api.urls import api
 
 
 @pytest.fixture
 def api_client() -> TestClient:
-    return TestClient(app)
+    return TestClient(api)
 
 
-@pytest_asyncio.fixture
-async def async_api_client() -> AsyncGenerator[AsyncClient, None]:
-    async with AsyncClient(
-        transport=ASGITransport(app=app),
-        base_url="http://test",
-    ) as client:
-        yield client
+@pytest.fixture
+def async_api_client() -> TestAsyncClient:
+    return TestAsyncClient(api)

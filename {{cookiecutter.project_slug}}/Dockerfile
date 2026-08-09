@@ -56,7 +56,7 @@ EXPOSE 8000
 ENTRYPOINT ["docker/entrypoint.sh"]
 {% if cookiecutter.use_channels == "y" -%}
 CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "config.asgi:application"]
-{% elif cookiecutter.use_fastapi == "y" -%}
+{% elif cookiecutter.use_django_ninja == "y" -%}
 CMD ["uvicorn", "config.asgi:application", "--host", "0.0.0.0", "--port", "8000"]
 {% else -%}
 CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000"]
