@@ -1,6 +1,6 @@
 exclude: ^{{cookiecutter.project_slug}}/app/db/migrations/
 default_language_version:
-  python: python3.12
+  python: python3.13
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks

@@ -20,7 +20,7 @@ A modern, well-structured Django project template that helps you quickly set up 
 
 ## Prerequisites
 
-- Python 3.12 or higher
+- Python 3.13 or higher
 - [Cookiecutter](https://cookiecutter.readthedocs.io/) (`pip install cookiecutter`)
 - [uv](https://docs.astral.sh/uv/) for dependency management
 - [Docker](https://docs.docker.com/get-docker/) and Docker Compose (optional, for the containerized dev setup)
