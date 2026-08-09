@@ -15,5 +15,6 @@
   "use_preline": "n",
   "use_sentry": "n",
   "use_channels": "n",
-  "use_django_ninja": "n"
+  "use_django_ninja": "n",
+  "use_celery": "y"
 }

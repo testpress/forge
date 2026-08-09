@@ -15,7 +15,8 @@ A modern, well-structured Django project template that helps you quickly set up 
 - 📦 uv for dependency management
 - 🔄 Optional WebSocket support with Django Channels
 - 🚀 Optional REST API with django-ninja (Pydantic schemas, OpenAPI docs)
-- 🐳 Docker + docker-compose for local development (Postgres, Redis, Celery worker)
+- ⏱️ Optional background tasks with Celery + Redis
+- 🐳 Docker + docker-compose for local development
 - ✅ GitHub Actions CI (lint, type-check, migrations check, tests)
 
 ## Prerequisites
@@ -45,6 +46,8 @@ cookiecutter https://github.com/testpress/forge.git
      - Sentry error tracking
      - Django Channels for WebSocket support
      - django-ninja for a REST API
+     - Celery + Redis for background tasks (the one option that defaults
+       to "y"; answer "n" to keep the project free of a Redis dependency)
 
 3. Navigate to your new project directory:
 ```bash
@@ -72,8 +75,9 @@ uv run python manage.py migrate
 uv run python manage.py runserver
 ```
 
-Alternatively, skip steps 4-7 and run everything (Django, Postgres, Redis, and
-a Celery worker) with Docker Compose instead:
+Alternatively, skip steps 4-7 and run everything (Django, Postgres, and —
+if you enabled Celery or Channels — Redis and a worker) with Docker Compose
+instead:
 
 ```bash
 cd your_project_name
@@ -95,6 +99,7 @@ your_project_name/
 │   │   ├── routers/       # API route modules
 │   │   └── schemas/       # Pydantic schemas
 │   ├── models/            # Django models
+│   ├── tasks/             # Celery tasks (if enabled)
 │   ├── views/             # Django views
 │   ├── templates/         # Django templates
 │   └── static/            # Django static files
@@ -106,7 +111,7 @@ your_project_name/
 ├── .github/workflows/     # CI (ruff, mypy, djlint, migrations, pytest)
 ├── manage.py             # Django management script
 ├── Dockerfile             # Multi-stage: dev (compose) and production targets
-├── docker-compose.yml     # Local dev stack: web, worker, Postgres, Redis
+├── docker-compose.yml     # Local dev stack: web, Postgres (+ Redis/worker)
 ├── pyproject.toml        # Project dependencies and tooling config
 └── uv.lock              # Locked dependencies
 ```
@@ -122,14 +127,14 @@ your_project_name/
 
 ## Docker
 
-`docker compose up --build` starts four services:
+`docker compose up --build` starts these services:
 
-| Service  | What it is |
-|----------|------------|
-| `web`    | Django dev server (`config.local`, `DEBUG=True`, autoreload via bind mount) on port 8000 |
-| `worker` | Celery worker, same image, no autoreload |
-| `db`     | Postgres 17 on port 5432 (credentials via `POSTGRES_*` env vars, default `postgres`/`postgres`) |
-| `redis`  | Redis 7 on port 6379 (Celery broker) |
+| Service  | When | What it is |
+|----------|------|------------|
+| `web`    | always | Django dev server (`config.local`, `DEBUG=True`, autoreload via bind mount) on port 8000 |
+| `db`     | always | Postgres 17 on port 5432 (credentials via `POSTGRES_*` env vars, default `postgres`/`postgres`) |
+| `redis`  | `use_celery` or `use_channels` | Redis 7 on port 6379 |
+| `worker` | `use_celery` | Celery worker, same image, no autoreload |
 
 The image is a multi-stage `Dockerfile` with two targets:
 - `dev` (what `docker-compose.yml` builds) — installs dev dependencies too
@@ -210,6 +215,22 @@ which talked to Django's session auth or ORM — and mounting it under
 the same developer experience (type hints, Pydantic, generated OpenAPI
 docs) while running as ordinary Django, so authentication, middleware,
 models and tests are all shared with the rest of the project.
+
+### Background tasks (Celery + Redis)
+If you selected "y" for `use_celery` (the default), the template includes:
+- A configured Celery app in `config/celery.py`
+- Example tasks in `app/tasks/`
+- A `BackgroundTask` model recording each run's status, progress events and
+  output files, plus the signal handlers that keep it up to date
+- A `worker` and `redis` service in `docker-compose.yml`
+
+Run a worker with:
+```bash
+uv run celery -A config.celery worker --loglevel=info
+```
+
+Answer "n" and none of the above is generated — no `celery`/`redis`
+dependency, no broker to run, no Redis service in Compose.
 
 ## Contributing
 

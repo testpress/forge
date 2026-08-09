@@ -22,11 +22,15 @@ from django.urls import path
 {% if cookiecutter.use_django_ninja == 'y' %}
 from app.api.urls import api
 {% endif %}
+{% if cookiecutter.use_celery == 'y' %}
 from app.views.ping import trigger_ping_task
+{% endif %}
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+{%- if cookiecutter.use_celery == 'y' %}
     path("ping-task/", trigger_ping_task, name="ping-task"),
+{%- endif %}
 {%- if cookiecutter.use_django_ninja == 'y' %}
     # Serves the API plus its OpenAPI schema and Swagger UI at /api/docs.
     path("api/", api.urls),
