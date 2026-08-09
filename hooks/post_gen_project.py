@@ -42,8 +42,13 @@ def remove_celery_files():
 
 
 def generate_secret_key():
-    """Generate a random Django secret key."""
-    chars = string.ascii_letters + string.digits + "!@#$%^&*(-_=+)"
+    """Generate a random Django secret key.
+
+    Deliberately excludes "$": this key is written to .env, and Docker
+    Compose interpolates $NAME in that file, so a key containing one would
+    silently reach the containers with part of it stripped out.
+    """
+    chars = string.ascii_letters + string.digits + "!@#%^&*(-_=+)"
     return "".join(random.choice(chars) for _ in range(50))
 
 
