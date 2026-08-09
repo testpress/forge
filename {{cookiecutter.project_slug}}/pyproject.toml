@@ -7,7 +7,7 @@ authors = [
 ]
 license = {text = "MIT"}
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 dependencies = [
     # Core Django & dependencies
     "Django==5.2.16",
@@ -145,8 +145,8 @@ exclude = [
 line-length = 88
 indent-width = 4
 
-# Assume Python 3.12
-target-version = "py312"
+# Assume Python 3.13
+target-version = "py313"
 
 [tool.ruff.lint]
 # https://docs.astral.sh/ruff/rules/
@@ -254,7 +254,7 @@ force-single-line = true
 
 # ==== mypy ====
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.13"
 check_untyped_defs = true
 ignore_missing_imports = true
 strict = true

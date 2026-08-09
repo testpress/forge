@@ -19,7 +19,7 @@ norecursedirs = [
 # ==== Ruff ====
 [tool.ruff]
 line-length = 79
-target-version = "py312"
+target-version = "py313"
 
 [tool.ruff.lint]
 select = ["F", "E", "W", "C90", "I", "N", "UP", "B", "SIM"]
