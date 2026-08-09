@@ -1,30 +1,20 @@
+"""Schemas shared across routers.
+
+There is no pagination schema here on purpose - django-ninja's
+``@paginate`` decorator wraps the declared ``response`` type for you.
 """
-Common schemas for the API.
-"""
 
-from typing import Any
-
-from pydantic import BaseModel
+from ninja import Schema
 
 
-class MessageResponse(BaseModel):
-    """Schema for message responses."""
+class MessageSchema(Schema):
+    """A plain human-readable message."""
 
     message: str
 
 
-class ErrorResponse(BaseModel):
-    """Schema for error responses."""
+class HealthSchema(Schema):
+    """Liveness response."""
 
-    detail: str
-    error_code: str | None = None
-
-
-class PaginatedResponse(BaseModel):
-    """Schema for paginated responses."""
-
-    items: list[Any]
-    total: int
-    page: int
-    size: int
-    pages: int
+    status: str
+    service: str

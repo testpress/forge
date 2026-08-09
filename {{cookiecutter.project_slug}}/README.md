@@ -24,15 +24,20 @@
    ```bash
    python manage.py runserver
    ```
+{% if cookiecutter.use_django_ninja == 'y' %}
+## API
 
-{% if cookiecutter.use_fastapi == 'y' %}
-5. Start the FastAPI server:
-   ```bash
-   uvicorn api:app --reload
-   ```
-   The API documentation will be available at: http://localhost:8001/docs
+The API is built with [django-ninja](https://django-ninja.dev/) and is
+served by the same process as the rest of the site - there is no second
+server to start. With `runserver` up:
+
+- Interactive docs: http://localhost:8000/api/docs
+- OpenAPI schema: http://localhost:8000/api/openapi.json
+
+Authentication uses `django.contrib.auth`, with bearer tokens signed by
+Django's own `SECRET_KEY`. See `app/api/README.md` for the endpoint list
+and details.
 {% endif %}
-
 ## Docker
 
 Alternatively, run everything (this app, Postgres, Redis, and a Celery

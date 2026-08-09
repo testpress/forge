@@ -1,1 +1,1 @@
-# Pydantic schemas package
+# Pydantic schemas for API request/response bodies.

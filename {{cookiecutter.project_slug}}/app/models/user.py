@@ -1,5 +1,6 @@
 from typing import ClassVar
 
+from asgiref.sync import sync_to_async
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import BaseUserManager
@@ -41,6 +42,23 @@ class UserManager(BaseUserManager, SafeDeleteManager):
             raise ValueError(message)
 
         return self.create_user(phone_number, password, **extra_fields)
+
+    # Async counterparts, mirroring django.contrib.auth.models.UserManager.
+    # Django only generates these for its own manager, so a custom manager
+    # has to provide them for async callers (e.g. the API layer).
+    async def acreate_user(self, phone_number, password=None, **extra_fields):
+        return await sync_to_async(self.create_user)(
+            phone_number,
+            password,
+            **extra_fields,
+        )
+
+    async def acreate_superuser(self, phone_number, password=None, **extra_fields):
+        return await sync_to_async(self.create_superuser)(
+            phone_number,
+            password,
+            **extra_fields,
+        )
 
 
 class UserPermission(BaseModel):

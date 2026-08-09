@@ -14,14 +14,15 @@ def remove_path(path):
         os.remove(path)
 
 
-def remove_fastapi_test_files():
-    """Drop FastAPI-only test files when FastAPI integration is disabled.
+def remove_api_files():
+    """Drop the API layer when django-ninja is disabled.
 
-    Their imports (fastapi, app.api) are unavailable in a non-FastAPI
-    project, so leaving them breaks pytest collection.
+    Its imports (ninja, app.api) are unavailable in a project generated
+    without the flag, so leaving these behind breaks pytest collection.
     """
-    for path in ("tests/conftest.py", "tests/test_fastapi.py", "tests/api"):
+    for path in ("app/api", "tests/conftest.py", "tests/api"):
         remove_path(path)
+
 
 def generate_secret_key():
     """Generate a random Django secret key."""
@@ -44,12 +45,13 @@ ALLOWED_HOSTS=localhost,127.0.0.1
 # ------------------------------------------------------------------------------
 SENTRY_DSN=
 {% endif %}
-{% if cookiecutter.use_fastapi == 'y' %}
-# FastAPI
+{% if cookiecutter.use_django_ninja == 'y' %}
+# API
 # ------------------------------------------------------------------------------
-FASTAPI_SECRET_KEY={secret_key}
-FASTAPI_HOST=0.0.0.0
-FASTAPI_PORT=8001
+# Bearer tokens are signed with SECRET_KEY above - there is no separate
+# API signing key to configure.
+API_TOKEN_MAX_AGE=86400
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 {% endif %}
 """
 
@@ -82,15 +84,15 @@ def setup_project():
     print("Creating .env file...")
     create_env_file()
 
-    {% if cookiecutter.use_fastapi != 'y' %}
-    print("Removing FastAPI-only test files...")
-    remove_fastapi_test_files()
+    {% if cookiecutter.use_django_ninja != 'y' %}
+    print("Removing API files (django-ninja not selected)...")
+    remove_api_files()
     {% endif %}
 
     print("Installing dependencies with uv...")
     run_command("uv sync --extra dev")
 
-    # Jinja conditionals (e.g. optional Sentry/FastAPI/Channels blocks, and
+    # Jinja conditionals (e.g. optional Sentry/API/Channels blocks, and
     # the raw-block escaping templates need around Django template tags) can
     # leave stray blank lines or unsorted imports behind depending on which
     # options were chosen. Auto-fix and format so the project starts clean
@@ -105,10 +107,10 @@ def setup_project():
     print("Running makemigrations...")
     run_command("uv run python manage.py makemigrations")
 
-    {% if cookiecutter.use_fastapi == 'y' %}
-    print("FastAPI integration enabled!")
-    print("To run the FastAPI server: uv run uvicorn api:app --reload")
-    print("API documentation will be available at: http://localhost:8001/docs")
+    {% if cookiecutter.use_django_ninja == 'y' %}
+    print("API enabled (django-ninja).")
+    print("Start it with the rest of the site: uv run python manage.py runserver")
+    print("Interactive docs: http://localhost:8000/api/docs")
     {% endif %}
 
     print("Setup complete.")

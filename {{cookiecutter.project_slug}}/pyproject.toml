@@ -31,14 +31,15 @@ dependencies = [
     # Optional Sentry
     "sentry-sdk==2.20.0",
     {% endif %}
-    {% if cookiecutter.use_fastapi == "y" %}
-    # Optional FastAPI
-    "fastapi[standard]>=0.115.12",
-    "uvicorn==0.24.0",
-    "python-multipart >= 0.0.18",
-    "python-jose[cryptography]==3.3.0",
-    "passlib[bcrypt]==1.7.4",
-    "python-jose[cryptography]==3.3.0",
+    {% if cookiecutter.use_django_ninja == "y" %}
+    # Optional API layer. django-ninja brings its own Pydantic dependency;
+    # authentication reuses django.contrib.auth, so there is no JWT or
+    # password-hashing library to add here.
+    "django-ninja==1.6.2",
+    "django-cors-headers==4.9.0",
+    # The API's operations are async, so it is served over ASGI rather than
+    # through the WSGI/gunicorn path the plain template uses.
+    "uvicorn[standard]==0.52.1",
     {% endif %}
     "celery==5.4.0",
     "redis==5.2.1",
@@ -225,14 +226,14 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [tool.ruff.lint.per-file-ignores]
 # Tests routinely use bare asserts, inline literals like `== 200`, and
-# compare against literal auth values like token_type "bearer" - that's
-# expected pytest style, not a real security/readability issue.
-"tests/**" = ["S101", "PLR2004", "S105"]
-# FastAPI's dependency-injection pattern requires calling Depends() as
-# an argument default; that's idiomatic FastAPI, not a bug.
+# literal passwords for the fixtures they create - that's expected pytest
+# style, not a real security/readability issue.
+"tests/**" = ["S101", "S105", "S106", "PLR2004"]
+# django-ninja passes the request as the first argument to every operation
+# even when the handler doesn't read it, so ARG001-style unused-argument
+# complaints don't apply; B008 covers Query()/Path() argument defaults,
+# which are idiomatic ninja rather than a mutable-default bug.
 "app/api/**" = ["B008"]
-# Root-level entry point script, not a package module.
-"api.py" = ["INP001"]
 # Deliberately commented-out example routing left for users to uncomment.
 "config/asgi.py" = ["ERA001"]
 

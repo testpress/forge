@@ -1,112 +1,99 @@
-# FastAPI Integration
+# API
 
-This directory contains the FastAPI application for {{ cookiecutter.project_name }}.
+The API for {{ cookiecutter.project_name }} is built with
+[django-ninja](https://django-ninja.dev/): Pydantic schemas, type-hint
+based request parsing and a generated OpenAPI document, running inside
+Django rather than beside it.
 
 ## Structure
 
 ```
 app/api/
-├── __init__.py           # Package initialization
-├── main.py              # FastAPI app instance and configuration
-├── routers/             # API route modules
-│   ├── __init__.py
-│   ├── auth.py          # Authentication endpoints
-│   ├── users.py         # User management endpoints
-│   └── health.py        # Health check endpoints
-├── schemas/             # Pydantic schemas for request/response validation
-│   ├── __init__.py
-│   ├── auth.py          # Authentication schemas
-│   ├── users.py         # User schemas
-│   └── common.py        # Common response schemas
-├── dependencies/        # FastAPI dependency injection
-│   ├── __init__.py
-│   └── auth.py          # Authentication dependencies
-└── middleware/          # Custom middleware
-    ├── __init__.py
-    └── cors.py          # CORS configuration
+├── __init__.py       # Package marker
+├── urls.py           # The NinjaAPI instance; included by config/urls.py
+├── security.py       # Bearer tokens, signed with Django's SECRET_KEY
+├── routers/
+│   ├── health.py     # Unauthenticated liveness endpoints
+│   ├── auth.py       # Login, current user
+│   └── users.py      # User CRUD
+└── schemas/
+    ├── auth.py
+    ├── users.py
+    └── common.py
 ```
 
-## Getting Started
+## Getting started
 
-1. **Run the FastAPI server:**
-   ```bash
-   uv run uvicorn api:app --reload
-   ```
+The API is part of the Django application - there is no second server to
+start:
 
-2. **Access the API documentation:**
-   - Swagger UI: http://localhost:8001/docs
-   - ReDoc: http://localhost:8001/redoc
+```bash
+python manage.py runserver
+```
 
-3. **Test the API:**
-   ```bash
-   # Health check
-   curl http://localhost:8001/api/v1/health
+- Swagger UI: http://localhost:8000/api/docs
+- OpenAPI schema: http://localhost:8000/api/openapi.json
 
-   # Login
-   curl -X POST http://localhost:8001/api/v1/auth/login \
-     -H "Content-Type: application/json" \
-     -d '{"username": "testuser", "password": "testpass"}'
-   ```
+Because the operations are async, production runs over ASGI
+(`uvicorn config.asgi:application`); the Dockerfile already does this.
 
-## Available Endpoints
+## Endpoints
 
-### Health Checks
-- `GET /api/v1/health` - Health check
-- `GET /api/v1/ping` - Simple ping
+| Method | Path | Auth | Purpose |
+| --- | --- | --- | --- |
+| GET | `/api/v1/health` | - | Liveness |
+| GET | `/api/v1/ping` | - | Round trip |
+| POST | `/api/v1/auth/login` | - | Exchange credentials for a token |
+| GET | `/api/v1/auth/me` | Bearer | The token's owner |
+| GET | `/api/v1/users/` | Bearer | Paginated user list |
+| POST | `/api/v1/users/` | Bearer | Create a user |
+| GET | `/api/v1/users/{id}` | Bearer | Fetch a user |
+| PATCH | `/api/v1/users/{id}` | Bearer | Partial update |
+| DELETE | `/api/v1/users/{id}` | Bearer | Delete a user |
 
-### Authentication
-- `POST /api/v1/auth/login` - Login to get JWT token
-- `GET /api/v1/auth/me` - Get current user info (requires authentication)
-
-### Users
-- `GET /api/v1/users` - Get all users (requires authentication)
-- `GET /api/v1/users/{user_id}` - Get specific user (requires authentication)
-- `POST /api/v1/users` - Create new user
-- `PUT /api/v1/users/{user_id}` - Update user (requires authentication)
-- `DELETE /api/v1/users/{user_id}` - Delete user (requires authentication)
+The API is authenticated by default (`NinjaAPI(auth=BearerAuth())`).
+Endpoints that must stay public opt out with `auth=None`, so a new router
+is protected unless you deliberately open it.
 
 ## Authentication
 
-The API uses JWT (JSON Web Tokens) for authentication:
+Login runs through `django.contrib.auth.aauthenticate`, so it respects
+`AUTHENTICATION_BACKENDS`, the configured password hashers and the
+`is_active` flag. The identifier is `phone_number`, because that is this
+project's `User.USERNAME_FIELD`.
 
-1. **Login** to get an access token
-2. **Include the token** in the Authorization header: `Bearer <token>`
-
-Example:
 ```bash
-# Login
-curl -X POST http://localhost:8001/api/v1/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username": "testuser", "password": "testpass"}'
+# Create a user to log in as
+python manage.py createsuperuser
 
-# Use the token
-curl -H "Authorization: Bearer <your-token>" \
-  http://localhost:8001/api/v1/users
+# Get a token
+curl -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"phone_number": "+15551234567", "password": "..."}'
+
+# Use it
+curl -H "Authorization: Bearer <token>" \
+  http://localhost:8000/api/v1/users/
 ```
 
-## Integration with Django
+Tokens are signed with `django.core.signing` using the project's
+`SECRET_KEY` and contain only a user id. There is no second user store and
+no second signing key: rotating `SECRET_KEY` invalidates tokens and web
+sessions together, and deactivating a user revokes their API access on the
+next request. `API_TOKEN_MAX_AGE` (settings) controls the lifetime.
 
-This FastAPI application is designed to work alongside your Django application:
-
-- **Django**: Handles web interface, admin, and traditional web pages
-- **FastAPI**: Handles API endpoints and modern API features
-
-You can integrate them by:
-1. Using Django models in FastAPI endpoints
-2. Sharing the same database
-3. Using Django's authentication system
+If you would rather authenticate browser clients with the session cookie
+they already have, django-ninja ships `ninja.security.django_auth` - add it
+to the `auth` list in `app/api/urls.py`.
 
 ## Development
 
-- **Add new endpoints**: Create new files in `routers/`
-- **Add new schemas**: Create new files in `schemas/`
-- **Add dependencies**: Create new files in `dependencies/`
-- **Run tests**: `uv run pytest tests/test_fastapi.py`
+- **New endpoints**: add a module under `routers/` and mount it in `urls.py`
+- **New schemas**: add a module under `schemas/`; use `ModelSchema` to
+  derive fields from a Django model instead of restating them
+- **Run the tests**: `uv run pytest tests/api`
 
-## Configuration
-
-FastAPI settings are in `config/fastapi.py`. You can customize:
-- CORS origins
-- JWT settings
-- Server configuration
-- Documentation settings
+Every operation is `async` and uses Django's async ORM (`afirst`,
+`aexists`, `acount`, `adelete`). Keeping the whole surface async is a
+deliberate rule: django-ninja's `TestAsyncClient` can then be used against
+any endpoint, and nothing silently blocks the event loop.

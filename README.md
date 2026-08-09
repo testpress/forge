@@ -14,7 +14,7 @@ A modern, well-structured Django project template that helps you quickly set up 
 - 🛠️ Modular project structure
 - 📦 uv for dependency management
 - 🔄 Optional WebSocket support with Django Channels
-- 🚀 Optional FastAPI integration for modern APIs
+- 🚀 Optional REST API with django-ninja (Pydantic schemas, OpenAPI docs)
 - 🐳 Docker + docker-compose for local development (Postgres, Redis, Celery worker)
 - ✅ GitHub Actions CI (lint, type-check, migrations check, tests)
 
@@ -44,7 +44,7 @@ cookiecutter https://github.com/testpress/forge.git
      - Preline UI components
      - Sentry error tracking
      - Django Channels for WebSocket support
-     - FastAPI for modern API development
+     - django-ninja for a REST API
 
 3. Navigate to your new project directory:
 ```bash
@@ -89,11 +89,11 @@ autoreload; source changes on the host are reflected immediately. See
 ```
 your_project_name/
 ├── app/                    # Main application directory
-│   ├── api/               # FastAPI application (if enabled)
+│   ├── api/               # django-ninja API (if enabled)
+│   │   ├── urls.py        # The NinjaAPI instance
+│   │   ├── security.py    # Bearer auth over django.contrib.auth
 │   │   ├── routers/       # API route modules
-│   │   ├── schemas/       # Pydantic schemas
-│   │   ├── dependencies/  # FastAPI dependencies
-│   │   └── middleware/    # Custom middleware
+│   │   └── schemas/       # Pydantic schemas
 │   ├── models/            # Django models
 │   ├── views/             # Django views
 │   ├── templates/         # Django templates
@@ -105,7 +105,6 @@ your_project_name/
 ├── tests/                 # Test suite
 ├── .github/workflows/     # CI (ruff, mypy, djlint, migrations, pytest)
 ├── manage.py             # Django management script
-├── api.py                # FastAPI entry point (if enabled)
 ├── Dockerfile             # Multi-stage: dev (compose) and production targets
 ├── docker-compose.yml     # Local dev stack: web, worker, Postgres, Redis
 ├── pyproject.toml        # Project dependencies and tooling config
@@ -136,8 +135,9 @@ The image is a multi-stage `Dockerfile` with two targets:
 - `dev` (what `docker-compose.yml` builds) — installs dev dependencies too
   (debug toolbar, pytest, ruff, ...) and runs `config.local`.
 - `production` (the default target for a plain `docker build .`, no
-  `--target` needed) — lean, no dev tooling, runs `config.production`{% if cookiecutter.use_channels == "y" %} via
-  `daphne`{% elif cookiecutter.use_fastapi == "y" %} via `uvicorn`{% else %} via `gunicorn`{% endif %}.
+  `--target` needed) — lean, no dev tooling, runs `config.production`. The
+  server depends on the flags: `daphne` with Channels, `uvicorn` with
+  django-ninja (its operations are async), otherwise `gunicorn`.
 
 Both targets share an entrypoint (`docker/entrypoint.sh`) that runs
 `migrate` and `collectstatic` before starting the server. The `worker`
@@ -183,39 +183,33 @@ To use WebSockets:
 3. Configure WebSocket routing in `config/asgi.py`
 4. Run the server with Daphne: `uv run daphne config.asgi:application`
 
-### FastAPI Integration
-If you selected "y" for `use_fastapi`, the template includes:
-- Complete FastAPI application structure
-- JWT authentication with password hashing
-- User management API endpoints
-- Automatic API documentation (Swagger/ReDoc)
-- CORS middleware configuration
-- Pydantic schemas for request/response validation
+### REST API (django-ninja)
+If you selected "y" for `use_django_ninja`, the template includes:
+- A `NinjaAPI` mounted at `/api/` in the project's own URLconf
+- Bearer authentication built on `django.contrib.auth`
+- User CRUD endpoints using Django's **async** ORM
+- Auto-generated OpenAPI docs at `/api/docs`
+- CORS via `django-cors-headers`
+- Pydantic schemas, with `ModelSchema` deriving fields from Django models
 
-To use FastAPI:
-1. Run the FastAPI server: `uv run uvicorn api:app --reload`
-2. Access API documentation: http://localhost:8001/docs
-3. Access ReDoc documentation: http://localhost:8001/redoc
-4. Test authentication: POST http://localhost:8001/api/v1/auth/login
-5. Test user endpoints: GET http://localhost:8001/api/v1/users
+There is no second server and no second port — the API is served by
+`manage.py runserver` (and by `uvicorn config.asgi:application` in the
+Docker image) alongside everything else:
 
-**FastAPI Features:**
-- **Authentication**: JWT-based authentication with `/api/v1/auth/login`
-- **User Management**: Full CRUD operations at `/api/v1/users`
-- **Health Checks**: `/api/v1/health` and `/api/v1/ping`
-- **Documentation**: Auto-generated OpenAPI documentation
-- **CORS**: Configured for frontend development
-- **Validation**: Pydantic schemas for all requests/responses
+- Interactive docs: http://localhost:8000/api/docs
+- Login: `POST http://localhost:8000/api/v1/auth/login`
+- Users: `GET http://localhost:8000/api/v1/users/`
 
-> **Known rough edge:** the paths above (`/api/v1/...`) are correct when
-> running the FastAPI app standalone via `uvicorn api:app`. When served
-> through `config.asgi:application` (i.e. the Docker image, or
-> `daphne`/`uvicorn config.asgi:application` directly) with `use_channels`
-> disabled, `config/asgi.py` mounts the same app under an *additional*
-> `/api` prefix (`main_app.mount("/api", fastapi_app)`), so the real paths
-> there are `/api/api/v1/...`. This is a pre-existing quirk in how the
-> combined Django+FastAPI ASGI app is mounted, not something this CI/Docker
-> work introduced or fixed — worth cleaning up separately.
+See `app/api/README.md` in a generated project for the full endpoint list.
+
+**Why django-ninja rather than FastAPI?** Earlier versions of this template
+bolted a FastAPI app onto the ASGI application. That gave the API its own
+JWT stack, its own signing key and its own idea of what a user is, none of
+which talked to Django's session auth or ORM — and mounting it under
+`config.asgi` made it mutually exclusive with Channels. django-ninja offers
+the same developer experience (type hints, Pydantic, generated OpenAPI
+docs) while running as ordinary Django, so authentication, middleware,
+models and tests are all shared with the rest of the project.
 
 ## Contributing
 

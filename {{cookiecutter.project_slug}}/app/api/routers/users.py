@@ -1,94 +1,102 @@
+"""User management endpoints.
+
+These are async and talk to Django's async ORM directly (``afirst``,
+``acount``, ``async for``, ``adelete``) - no thread pool, no second data
+access layer, and the same models the admin and the rest of the site use.
 """
-User management endpoints for the API.
-"""
 
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import status
+from django.http import HttpRequest
+from ninja import Router
+from ninja.errors import HttpError
+from ninja.pagination import paginate
 
-from app.api.dependencies.auth import get_current_user
-from app.api.schemas.users import User
-from app.api.schemas.users import UserCreate
-from app.api.schemas.users import UserUpdate
+from app.api.schemas.users import UserCreateSchema
+from app.api.schemas.users import UserSchema
+from app.api.schemas.users import UserUpdateSchema
+from app.models import User
 
-router = APIRouter()
+router = Router()
 
-
-@router.get("/", response_model=list[User])
-async def get_users(current_user: dict = Depends(get_current_user)):
-    """Get all users."""
-    # In a real application, you would query your Django user model
-    # For now, we'll return a mock response
-    return [
-        {
-            "id": 1,
-            "username": "testuser",
-            "email": "test@example.com",
-            "is_active": True,
-        },
-    ]
+USER_NOT_FOUND = "User not found"
+PHONE_NUMBER_TAKEN = "That phone number is already registered"
 
 
-@router.get("/{user_id}", response_model=User)
-async def get_user(user_id: int, current_user: dict = Depends(get_current_user)):
-    """Get a specific user by ID."""
-    # In a real application, you would query your Django user model
-    if user_id != 1:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-        )
-
-    return {
-        "id": user_id,
-        "username": "testuser",
-        "email": "test@example.com",
-        "is_active": True,
-    }
+async def _get_user_or_404(user_id: int) -> User:
+    user = await User.objects.filter(pk=user_id).afirst()
+    if user is None:
+        raise HttpError(404, USER_NOT_FOUND)
+    return user
 
 
-@router.post("/", response_model=User, status_code=status.HTTP_201_CREATED)
-async def create_user(user: UserCreate):
-    """Create a new user."""
-    # In a real application, you would create a user in your Django model
-    # For now, we'll return a mock response
-    return {
-        "id": 2,
-        "username": user.username,
-        "email": user.email,
-        "is_active": True,
-    }
+@router.get("/", response=list[UserSchema])
+@paginate
+async def list_users(request: HttpRequest):
+    """List users, newest last.
+
+    ``@paginate`` wraps the response in ``{"items": [...], "count": n}`` and
+    reads ``?limit=`` / ``?offset=`` from the query string.
+    """
+    return User.objects.order_by("id")
 
 
-@router.put("/{user_id}", response_model=User)
+@router.get("/{int:user_id}", response=UserSchema)
+async def get_user(request: HttpRequest, user_id: int) -> User:
+    """Fetch a single user."""
+    return await _get_user_or_404(user_id)
+
+
+@router.post("/", response={201: UserSchema})
+async def create_user(request: HttpRequest, payload: UserCreateSchema) -> tuple:
+    """Create a user.
+
+    Goes through ``UserManager.acreate_user`` so the password is hashed by
+    Django and the accompanying ``Profile`` row is created, exactly as it
+    would be from ``manage.py createsuperuser``.
+
+    The duplicate check is a query rather than a caught ``IntegrityError``
+    because letting the constraint fire would poison the surrounding
+    transaction and turn a 409 into a 500 on the next query.
+    """
+    taken = await User.objects.filter(phone_number=payload.phone_number).aexists()
+    if taken:
+        raise HttpError(409, PHONE_NUMBER_TAKEN)
+
+    user = await User.objects.acreate_user(
+        phone_number=payload.phone_number,
+        password=payload.password,
+        email=payload.email,
+    )
+    return 201, user
+
+
+@router.patch("/{int:user_id}", response=UserSchema)
 async def update_user(
+    request: HttpRequest,
     user_id: int,
-    user_update: UserUpdate,
-    current_user: dict = Depends(get_current_user),
-):
-    """Update a user."""
-    # In a real application, you would update the user in your Django model
-    if user_id != 1:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-        )
+    payload: UserUpdateSchema,
+) -> User:
+    """Apply a partial update."""
+    user = await _get_user_or_404(user_id)
 
-    return {
-        "id": user_id,
-        "username": user_update.username or "testuser",
-        "email": user_update.email or "test@example.com",
-        "is_active": True,
-    }
+    changed = payload.model_dump(exclude_unset=True, exclude_none=True)
+    for field, value in changed.items():
+        setattr(user, field, value)
+
+    if changed:
+        await user.asave(update_fields=list(changed))
+
+    return user
 
 
-@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_user(user_id: int, current_user: dict = Depends(get_current_user)):
-    """Delete a user."""
-    # In a real application, you would delete the user from your Django model
-    if user_id != 1:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-        )
+@router.delete("/{int:user_id}", response={204: None})
+async def delete_user(request: HttpRequest, user_id: int) -> tuple:
+    """Soft-delete a user.
+
+    Deleted through the queryset rather than the instance: Django's
+    `Model.adelete()` forwards `keep_parents` down to `save()`, which
+    django-safedelete's soft-delete path does not accept, so
+    `user.adelete()` raises TypeError on any SafeDeleteModel.
+    """
+    await _get_user_or_404(user_id)
+    await User.objects.filter(pk=user_id).adelete()
+    return 204, None
