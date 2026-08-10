@@ -44,7 +44,20 @@ dependencies = [
     {% if cookiecutter.use_celery == "y" %}
     # Optional background tasks
     "celery==5.6.3",
-    "redis==5.2.1",
+    {% endif %}
+    {% if cookiecutter.use_celery == "y" or cookiecutter.use_channels == "y" %}
+    # The redis client backs two different things - Celery's broker and
+    # channels-redis's channel layer - so it is gated on either flag,
+    # mirroring how docker-compose.yml gates the redis service. Without
+    # the "or", a Channels-only project would still get redis pulled in
+    # transitively by channels-redis, but unpinned.
+    #
+    # Held below 6.5 deliberately: kombu (Celery's transport) declares
+    # `redis!=4.5.5,!=5.0.2,<6.5,>=4.5.2`, so anything newer is outside
+    # the range Celery supports - and switching this to `celery[redis]`
+    # would make the project fail to resolve outright. 6.4.0 is the
+    # newest release inside that range. Revisit when kombu lifts the cap.
+    "redis==6.4.0",
     {% endif %}
 ]
 
