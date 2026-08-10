@@ -42,8 +42,10 @@ dependencies = [
     "uvicorn[standard]==0.52.1",
     {% endif %}
     {% if cookiecutter.use_celery == "y" %}
-    # Optional background tasks
-    "celery==5.6.3",
+    # Optional background tasks. Declared with the [redis] extra so that
+    # kombu's supported redis range is applied by the resolver rather than
+    # matched by hand - see the redis pin below.
+    "celery[redis]==5.6.3",
     {% endif %}
     {% if cookiecutter.use_celery == "y" or cookiecutter.use_channels == "y" %}
     # The redis client backs two different things - Celery's broker and
@@ -53,10 +55,11 @@ dependencies = [
     # transitively by channels-redis, but unpinned.
     #
     # Held below 6.5 deliberately: kombu (Celery's transport) declares
-    # `redis!=4.5.5,!=5.0.2,<6.5,>=4.5.2`, so anything newer is outside
-    # the range Celery supports - and switching this to `celery[redis]`
-    # would make the project fail to resolve outright. 6.4.0 is the
-    # newest release inside that range. Revisit when kombu lifts the cap.
+    # `redis!=4.5.5,!=5.0.2,<6.5,>=4.5.2`, and because celery is declared
+    # with its [redis] extra above, that ceiling is now enforced by the
+    # resolver. Raising this past 6.4.x fails the lock outright instead of
+    # silently producing a combination Celery does not support. 6.4.0 is
+    # the newest release inside the range; revisit when kombu lifts it.
     "redis==6.4.0",
     {% endif %}
 ]
