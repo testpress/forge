@@ -232,6 +232,16 @@ uv run celery -A config.celery worker --loglevel=info
 Answer "n" and none of the above is generated — no `celery`/`redis`
 dependency, no broker to run, no Redis service in Compose.
 
+> **Why this flag defaults to "y" when every other optional flag defaults
+> to "n":** the others are additive, so "n" gives you what the template
+> always gave you. Celery was unconditional before it was put behind a
+> flag, so defaulting it off would change what an existing user's bake
+> produces — silently dropping models and a migration from a project that
+> re-runs the template expecting continuity. Defaulting to "y" keeps the
+> default output unchanged and makes opting out a deliberate choice.
+> (`cookiecutter.json` is strict JSON and cannot carry comments, which is
+> why this note lives here.)
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
