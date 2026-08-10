@@ -59,7 +59,10 @@ docs/_build/
 target/
 
 # pyenv
-.python-version
+# Anchored to the repository root on purpose. Unanchored, this pattern
+# also matched {{cookiecutter.project_slug}}/.python-version - a file the
+# template is meant to ship, which was therefore silently never committed.
+/.python-version
 
 # celery beat schedule file
 celerybeat-schedule
