@@ -2,29 +2,61 @@ exclude: ^{{cookiecutter.project_slug}}/app/db/migrations/
 default_language_version:
   python: python3.13
 
+# Cookiecutter renders two things as Jinja: everything under
+# {{cookiecutter.project_slug}}/, and its hook scripts
+# (hooks/post_gen_project.py, which is why `{% if cookiecutter.x %}` works
+# in there). Those files are templates, not source.
+#
+# A hook that parses them as Python/TOML/YAML chokes on the
+# `{% if %}` tags, and one that formats them applies the *wrong* rules:
+# the generated project has its own ruff config (line-length 88,
+# force-single-line imports) which differs from this repo's (79, off), so
+# formatting them from here produces changes that post_gen_project.py and
+# CI immediately revert. The two configs would fight on every commit.
+#
+# Those files are linted after baking instead, where the project's own
+# config applies: post_gen_project.py runs `ruff check --fix`, `ruff
+# format` and djlint over the generated project, and
+# .github/workflows/validate-template.yml bakes every flag combination and
+# runs the full gate set against each.
+#
+# So: hooks that parse or rewrite a file *as a language* skip the
+# Jinja-rendered files. Hooks that only inspect bytes - whitespace, final
+# newlines, private keys, case conflicts - stay global, because they work
+# correctly on templated sources and are worth keeping there.
+#
+# Everything else is still linted normally, so adding a plain .py script
+# to this repo picks up ruff without any change here.
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:
+      # --- Byte-level: safe on Jinja templates, kept global ---
       - id: trailing-whitespace
       - id: end-of-file-fixer
-      - id: check-json
-        exclude: '^{{cookiecutter\.project_slug}}/app/static/package.json$'
-      - id: check-toml
-      - id: check-xml
-      - id: check-yaml
-      - id: debug-statements
-        exclude: '^{{cookiecutter\.project_slug}}/app/apps\.py$'
-      - id: check-builtin-literals
-        exclude: '^{{cookiecutter\.project_slug}}/app/apps\.py$'
       - id: check-case-conflict
       - id: detect-private-key
+
+      # --- Parser-backed: cannot run on templates of the language ---
+      - id: check-json
+        exclude: &jinja_rendered '^(\{\{cookiecutter\.project_slug\}\}/|hooks/(pre|post)_gen_project\.py$)'
+      - id: check-toml
+        exclude: *jinja_rendered
+      - id: check-xml
+        exclude: *jinja_rendered
+      - id: check-yaml
+        exclude: *jinja_rendered
+      - id: debug-statements
+        exclude: *jinja_rendered
+      - id: check-builtin-literals
+        exclude: *jinja_rendered
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.16.2
     hooks:
       - id: ruff
         args: [--fix]
-        exclude: '^{{cookiecutter\.project_slug}}/app/apps\.py$'
+        exclude: *jinja_rendered
       - id: ruff-format
-        exclude: '^{{cookiecutter\.project_slug}}/app/apps\.py$'
+        exclude: *jinja_rendered
