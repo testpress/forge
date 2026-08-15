@@ -8,6 +8,7 @@ resolves back to a real ``django.contrib.auth`` user. Rotating
 deactivated user loses API access immediately.
 """
 
+from typing import TYPE_CHECKING
 from typing import Any
 
 from django.conf import settings
@@ -20,6 +21,18 @@ from app.models import User
 # Namespaces these signatures so a token can never be replayed against
 # another use of django.core.signing elsewhere in the project.
 SIGNING_SALT = "{{ cookiecutter.project_slug }}.api.auth"
+
+if TYPE_CHECKING:
+    # django-ninja assigns the authenticated principal to `request.auth`
+    # but ships no typed request class to declare it on. Endpoints behind
+    # BearerAuth can annotate their request with this instead, which
+    # states what the auth class guarantees and keeps `request.auth`
+    # checked as a User rather than an unknown attribute. At runtime it is
+    # exactly HttpRequest.
+    class AuthedRequest(HttpRequest):
+        auth: User
+else:
+    AuthedRequest = HttpRequest
 
 
 def create_access_token(user: User) -> str:
@@ -35,7 +48,7 @@ class BearerAuth(HttpBearer):
     both styles of endpoint can share this class.
     """
 
-    async def authenticate(  # type: ignore[override]
+    async def authenticate(
         self,
         request: HttpRequest,
         token: str,

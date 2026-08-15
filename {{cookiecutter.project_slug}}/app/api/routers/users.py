@@ -5,6 +5,7 @@ These are async and talk to Django's async ORM directly (``afirst``,
 access layer, and the same models the admin and the rest of the site use.
 """
 
+from django.db.models import QuerySet
 from django.http import HttpRequest
 from ninja import Router
 from ninja.errors import HttpError
@@ -30,7 +31,7 @@ async def _get_user_or_404(user_id: int) -> User:
 
 @router.get("/", response=list[UserSchema])
 @paginate
-async def list_users(request: HttpRequest):
+async def list_users(request: HttpRequest) -> QuerySet[User]:
     """List users, newest last.
 
     ``@paginate`` wraps the response in ``{"items": [...], "count": n}`` and
@@ -46,7 +47,10 @@ async def get_user(request: HttpRequest, user_id: int) -> User:
 
 
 @router.post("/", response={201: UserSchema})
-async def create_user(request: HttpRequest, payload: UserCreateSchema) -> tuple:
+async def create_user(
+    request: HttpRequest,
+    payload: UserCreateSchema,
+) -> tuple[int, User]:
     """Create a user.
 
     Goes through ``UserManager.acreate_user`` so the password is hashed by
@@ -89,7 +93,7 @@ async def update_user(
 
 
 @router.delete("/{int:user_id}", response={204: None})
-async def delete_user(request: HttpRequest, user_id: int) -> tuple:
+async def delete_user(request: HttpRequest, user_id: int) -> tuple[int, None]:
     """Soft-delete a user.
 
     Deleted through the queryset rather than the instance: Django's

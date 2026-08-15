@@ -15,6 +15,7 @@ from app.api.schemas.auth import BEARER
 from app.api.schemas.auth import LoginSchema
 from app.api.schemas.auth import TokenSchema
 from app.api.schemas.users import UserSchema
+from app.api.security import AuthedRequest
 from app.api.security import create_access_token
 from app.models import User
 
@@ -41,9 +42,10 @@ async def login(request: HttpRequest, payload: LoginSchema) -> dict[str, str]:
 
 
 @router.get("/me", response=UserSchema)
-async def me(request: HttpRequest) -> User:
+async def me(request: AuthedRequest) -> User:
     """Return the user the presented token belongs to.
 
-    ``request.auth`` is set by ``BearerAuth`` and is a real ``User`` row.
+    ``request.auth`` is set by ``BearerAuth`` and is a real ``User`` row;
+    ``AuthedRequest`` is what tells the checker that.
     """
     return request.auth
