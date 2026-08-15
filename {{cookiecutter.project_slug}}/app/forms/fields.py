@@ -1,3 +1,5 @@
+from typing import Any
+
 from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.timezone import localdate
@@ -6,7 +8,7 @@ from django.utils.timezone import localdate
 class NoFutureDateField(forms.DateField):
     """Custom DateField that validates age and prevents future dates."""
 
-    def validate(self, value):
+    def validate(self, value: Any) -> None:
         """Validate the date of birth."""
         super().validate(value)
 
