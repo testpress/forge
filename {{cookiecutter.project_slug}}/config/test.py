@@ -1,3 +1,6 @@
+from typing import Any
+from typing import cast
+
 from .base import *  # noqa: F403
 
 # Use in-memory SQLite for faster tests
@@ -19,14 +22,18 @@ CACHES = {
 
 # Disable migrations to speed up tests
 class DisableMigrations:
-    def __contains__(self, item):
+    def __contains__(self, item: str) -> bool:
         return True
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: str) -> str:
         return "notmigrations"
 
 
-MIGRATION_MODULES = DisableMigrations()
+# Django declares this setting as dict[str, str]. The object above is the
+# conventional duck-typed stand-in - Django only ever asks it `in` and
+# `[]` - so cast rather than ignore: the cast records that the shape is
+# deliberate, where an ignore would only silence the symptom.
+MIGRATION_MODULES = cast("dict[str, str]", DisableMigrations())
 
 # Use MD5 hasher for faster tests
 PASSWORD_HASHERS = [
@@ -35,7 +42,11 @@ PASSWORD_HASHERS = [
 
 # Disable debug mode for testing
 DEBUG = False
-TEMPLATES[0]["OPTIONS"]["debug"] = False  # noqa: F405
+# TEMPLATES arrives through the star import above. mypy joins the value
+# types of that dict literal down to `object`, so it cannot see that
+# "OPTIONS" holds a dict; name the shape once and mutate through it.
+template_options = cast("dict[str, Any]", TEMPLATES[0]["OPTIONS"])  # noqa: F405
+template_options["debug"] = False
 
 # Reduce logging output for tests
 LOGGING = {
