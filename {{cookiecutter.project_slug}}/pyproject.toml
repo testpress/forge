@@ -290,6 +290,16 @@ plugins = [
 module = "*.migrations.*"
 ignore_errors = true
 
+[[tool.mypy.overrides]]
+# Tests are type-checked, but test functions are not required to carry
+# `-> None`. Strict mode would demand an annotation on every one of them,
+# which is ceremony rather than safety: `check_untyped_defs = true` above
+# means the bodies are still fully checked, so a misspelled attribute, a
+# wrong argument count or a misused model is still an error here. Only
+# the signature requirement is relaxed, and only for tests.
+module = "tests.*"
+disallow_untyped_defs = false
+
 [tool.django-stubs]
 django_settings_module = "config.local"
 strict_settings = true
