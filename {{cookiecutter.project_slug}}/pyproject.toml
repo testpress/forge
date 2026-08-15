@@ -82,6 +82,12 @@ dev = [
     "pytest-mock==3.14.1",
     "factory-boy==3.3.3",
     "types-factory-boy==0.4.1",
+    {% if cookiecutter.use_celery == "y" %}
+    # Celery ships no type information, so every @shared_task and
+    # @task_*.connect decorator is untyped and silently untypes the
+    # function it decorates. These stubs restore that.
+    "celery-types==0.26.0",
+    {% endif %}
     "faker==37.3.0",
     "pytest-xdist==3.7.0",
     "pytest-env==1.1.5",
