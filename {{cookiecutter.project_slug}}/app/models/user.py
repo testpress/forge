@@ -71,7 +71,7 @@ class UserPermission(BaseModel):
             "permission",
         )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.user} - {self.permission}"
 
 
@@ -94,7 +94,7 @@ class User(AbstractUser, BaseModel):
 
     objects = UserManager()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.phone_number
 
     def get_user_permissions(self):

@@ -49,7 +49,7 @@ class BackgroundTask(BaseModel):
         verbose_name = "Background Task"
         verbose_name_plural = "Background Tasks"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.name} [{self.task_id}]"
 
 
@@ -79,11 +79,11 @@ class BackgroundTaskEvent(BaseModel):
         verbose_name = "Background Task Event"
         verbose_name_plural = "Background Task Events"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.get_event_display()} - {self.task.name}"
 
 
-def background_task_upload_path(instance, filename: str) -> str:
+def background_task_upload_path(instance: "BackgroundTaskFile", filename: str) -> str:
     return f"background_tasks/{instance.task.task_id}/{filename}"
 
 
@@ -101,5 +101,5 @@ class BackgroundTaskFile(BaseModel):
         verbose_name = "Background Task File"
         verbose_name_plural = "Background Task Files"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.task.name} - {self.file.name}"
