@@ -6,7 +6,7 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import BaseUserManager
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from safedelete.models import SafeDeleteManager
+from safedelete.managers import SafeDeleteManager
 
 from app.models import BaseModel
 from app.models import Permission

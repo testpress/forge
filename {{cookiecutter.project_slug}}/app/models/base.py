@@ -1,5 +1,5 @@
 from model_utils.models import TimeStampedModel
-from safedelete.models import SOFT_DELETE_CASCADE
+from safedelete.config import SOFT_DELETE_CASCADE
 from safedelete.models import SafeDeleteModel
 from simple_history.models import HistoricalRecords
 
