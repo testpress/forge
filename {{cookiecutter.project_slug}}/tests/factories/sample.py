@@ -1,3 +1,6 @@
+from typing import Any
+from typing import cast
+
 import factory
 from factory.django import DjangoModelFactory
 
@@ -15,7 +18,7 @@ class UserFactory(DjangoModelFactory[User]):
         skip_postgeneration_save = True
 
     phone_number = factory.Sequence(lambda n: f"+1555000{n:04d}")
-    email = factory.Faker("email")
+    email: Any = factory.Faker("email")
 
     @factory.post_generation
     def password(self, create, extracted, **kwargs):
@@ -27,5 +30,8 @@ class UserFactory(DjangoModelFactory[User]):
         """
         if not create:
             return
-        self.set_password(extracted or DEFAULT_TEST_PASSWORD)
-        self.save(update_fields=["password"])
+        # factory_boy passes the built instance here, but types-factory-boy
+        # types the first argument as the Factory class.
+        user = cast("User", self)
+        user.set_password(extracted or DEFAULT_TEST_PASSWORD)
+        user.save(update_fields=["password"])
