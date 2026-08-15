@@ -18,6 +18,8 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.urls import URLPattern
+from django.urls import URLResolver
 from django.urls import path
 {% if cookiecutter.use_django_ninja == 'y' %}
 from app.api.urls import api
@@ -26,7 +28,10 @@ from app.api.urls import api
 from app.views.ping import trigger_ping_task
 {% endif %}
 
-urlpatterns = [
+# Annotated explicitly: with only the admin route present (the flags below
+# all off), mypy would infer list[URLResolver] from that single entry and
+# then reject the URLPattern entries appended under `if settings.DEBUG`.
+urlpatterns: list[URLPattern | URLResolver] = [
     path("admin/", admin.site.urls),
 {%- if cookiecutter.use_celery == 'y' %}
     path("ping-task/", trigger_ping_task, name="ping-task"),

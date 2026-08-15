@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING
 from typing import Any
 
 from celery.signals import task_failure
@@ -5,7 +6,6 @@ from celery.signals import task_prerun
 from celery.signals import task_received
 from celery.signals import task_revoked
 from celery.signals import task_success
-from django.core.files import File
 from django.utils.timezone import now
 
 from app.models import CELERY_STATE_MAP
@@ -15,8 +15,15 @@ from app.models import BackgroundTaskFile
 from app.models import EventType
 from app.models import TaskStatus
 
+if TYPE_CHECKING:
+    from django.core.files import File
 
-def attach_file_to_task(task_id: str, file_obj: File, description: str = "") -> None:
+
+def attach_file_to_task(
+    task_id: str,
+    file_obj: "File[Any]",
+    description: str = "",
+) -> None:
     try:
         task = BackgroundTask.objects.get(task_id=task_id)
         BackgroundTaskFile.objects.create(
