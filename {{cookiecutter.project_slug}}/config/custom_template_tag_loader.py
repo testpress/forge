@@ -1,9 +1,13 @@
+from collections.abc import Iterable
+from collections.abc import Iterator
 from importlib import import_module
 
 from django.template.backends.django import get_package_libraries
 
 
-def get_custom_template_tag_modules(candidates):
+def get_custom_template_tag_modules(
+    candidates: Iterable[str],
+) -> Iterator[tuple[str, str]]:
     """
     Yield custom template tag module names and their full import paths.
 
@@ -24,7 +28,7 @@ def get_custom_template_tag_modules(candidates):
                 yield module_name, name
 
 
-def get_custom_template_tags(folders):
+def get_custom_template_tags(folders: Iterable[str]) -> dict[str, str]:
     """
     Return a dictionary mapping custom template tag module names
     to their full import paths.
