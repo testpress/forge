@@ -66,6 +66,16 @@ jobs:
         working-directory: testproj
         run: uv run djlint . --check
 
+      # The generated project's own ci.yml runs mypy as a blocking job, so
+      # it has to be checked here too - otherwise a template change that
+      # breaks type checking passes this workflow and only surfaces on the
+      # first CI run of somebody's newly generated project. Run per flag
+      # combination, because which files exist - and even what a list's
+      # element type infers to - depends on the flags.
+      - name: mypy
+        working-directory: testproj
+        run: uv run mypy .
+
       - name: Check for missing migrations
         working-directory: testproj
         run: uv run python manage.py makemigrations --check --dry-run
