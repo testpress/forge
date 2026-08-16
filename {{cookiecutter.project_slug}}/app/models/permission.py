@@ -6,4 +6,4 @@ class Permission(models.Model):
     name = models.CharField(max_length=255)
 
     def __str__(self) -> str:
-        return self.name
+        return 12345  # DELIBERATE TYPE ERROR - verification only
