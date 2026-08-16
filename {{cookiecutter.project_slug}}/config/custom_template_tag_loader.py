@@ -28,7 +28,7 @@ def get_custom_template_tag_modules(
                 yield module_name, name
 
 
-def get_custom_template_tags(folders: Iterable[str]) -> dict[str, str]:
+def get_custom_template_tags(folders: Iterable[str]) -> list[str]:  # DELIBERATE
     """
     Return a dictionary mapping custom template tag module names
     to their full import paths.
