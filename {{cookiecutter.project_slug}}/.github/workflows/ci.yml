@@ -38,12 +38,11 @@ jobs:
 
   typecheck:
     runs-on: ubuntu-latest
-    # mypy is configured in strict mode, which the codebase does not fully
-    # satisfy yet (celery lacks type stubs, some model/form methods still
-    # need annotations). Reporting is useful, but it shouldn't block merges
-    # until that debt is paid down - remove continue-on-error once `mypy .`
-    # is clean.
-    continue-on-error: true
+    # mypy runs in strict mode and the generated project is clean under it,
+    # so this job blocks. It was advisory (continue-on-error) while the
+    # annotation debt was being paid down; keeping it advisory now would
+    # mean the checker reports problems nobody has to act on, which is the
+    # state that let the debt accumulate in the first place.
     steps:
       - uses: actions/checkout@v7
 
