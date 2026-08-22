@@ -1,4 +1,24 @@
 # syntax=docker/dockerfile:1
+
+# ---------------------------------------------------------------------------
+# frontend: builds the Vite/Tailwind bundle that app/helpers/vite.py's
+# vite_static tag reads from app/static/dist/.vite/manifest.json. Only the
+# production image needs this - dev runs the Vite dev server directly
+# (see docker-compose.yml, `npm run start`), so vite_static proxies to it
+# instead of reading a manifest.
+# ---------------------------------------------------------------------------
+FROM node:22-slim AS frontend
+
+WORKDIR /app/app/static
+
+# Install dependencies first, separately from the rest of app/static, so
+# this layer is only rebuilt when package.json actually changes.
+COPY app/static/package.json ./
+RUN npm install
+
+COPY app/static/ ./
+RUN npm run build
+
 FROM python:3.13-slim AS base
 
 # Install uv (see https://docs.astral.sh/uv/guide/integration/docker/)
@@ -44,6 +64,9 @@ FROM base AS production
 
 RUN uv sync --frozen --no-install-project --no-dev
 COPY . .
+# app/static/dist is excluded by .dockerignore (it's build output, not
+# source) - pull the version built by the frontend stage instead.
+COPY --from=frontend /app/app/static/dist ./app/static/dist
 RUN uv sync --frozen --no-dev
 
 ENV PATH="/app/.venv/bin:$PATH" \
