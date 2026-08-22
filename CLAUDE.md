@@ -48,6 +48,7 @@ app/
 └── views/        # Django views
 
 config/           # settings (base/local/production/test), asgi/wsgi, urls, celery.py
+frontend/         # Vite/Tailwind project (package.json, css/, js/) — see below
 tests/            # pytest suite; tests/factories (factory-boy), tests/mixins
 ```
 
@@ -79,7 +80,7 @@ tests/            # pytest suite; tests/factories (factory-boy), tests/mixins
 - REST API: `django-ninja` (Pydantic schemas, OpenAPI docs) — not DRF
 - Errors: `sentry-sdk` (only when `use_sentry=y`)
 - Images: `pillow`; DB driver: `psycopg[binary]`
-- Frontend build (`app/static/`): Vite + **Tailwind CSS v4**, wired via the
+- Frontend build (`frontend/`): Vite + **Tailwind CSS v4**, wired via the
   `@tailwindcss/vite` plugin — no `postcss.config.js`, no `autoprefixer`,
   no `tailwind.config.js`; Tailwind config lives in `css/styles.css`
   (`@import`/`@plugin`/`@source`). `@tailwindcss/forms` and
@@ -88,7 +89,19 @@ tests/            # pytest suite; tests/factories (factory-boy), tests/mixins
   `@tailwindcss/container-queries` are gone — v4 has both natively.
   Preline UI (`use_preline=y`) is on its v4-compatible major, initialized
   via `preline/non-auto` + `HSStaticMethods.autoInit()` rather than the
-  old side-effect `import 'preline'`.
+  old side-effect `import 'preline'`. `frontend/` deliberately lives
+  outside `app/`: `django.contrib.staticfiles`'s `AppDirectoriesFinder`
+  auto-collects an app's entire `static/` folder, which would otherwise
+  sweep in the raw, pre-build source alongside `frontend/dist`'s actual
+  build output. Only `frontend/dist` (via `STATICFILES_DIRS` in
+  `config/base.py`) is ever visible to `collectstatic`.
+- Static file serving (production): `whitenoise`, serving
+  `collectstatic`'s output directly from the app with hashed filenames
+  and far-future cache headers (`STORAGES["staticfiles"]` in
+  `config/production.py`, `WhiteNoiseMiddleware` in `config/base.py`) —
+  put a CDN (Cloudflare, CloudFront, …) in front as a caching reverse
+  proxy rather than reaching for S3/GCS + django-storages. `STATIC_URL`
+  is env-overridable if the CDN needs its own domain.
 - Testing: `pytest` + `pytest-django` + `factory-boy` + `faker` +
   `pytest-mock` + `pytest-asyncio` + `pytest-xdist`
 - Redis is pinned `<6.5` deliberately (kombu's supported range via

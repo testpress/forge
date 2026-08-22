@@ -14,7 +14,7 @@ db.sqlite3
 staticfiles
 media
 node_modules
-app/static/dist
+frontend/dist
 .env
 .env.*
 !.env.example

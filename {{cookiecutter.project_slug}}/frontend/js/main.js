@@ -1,4 +1,4 @@
-// app/static/js/main.js
+// frontend/js/main.js
 //
 {% if cookiecutter.use_preline == 'y' %}
 import { HSStaticMethods } from 'preline/non-auto';

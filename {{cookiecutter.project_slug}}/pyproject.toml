@@ -21,6 +21,11 @@ dependencies = [
     "pillow==12.3.0",
     "psycopg[binary]==3.3.4",
     "gunicorn==26.0.0",
+    # Serves collected static files directly from the app with hashed
+    # filenames and far-future cache headers, so a CDN placed in front of
+    # the app (Cloudflare, CloudFront, etc.) can cache them at the edge
+    # without any S3/GCS bucket in between. See config/production.py.
+    "whitenoise==6.12.0",
     {% if cookiecutter.use_channels == "y" %}
     # Optional Channels
     "channels==4.2.2",
@@ -164,7 +169,7 @@ exclude = [
     "site-packages",
     "venv",
     "app/db/migrations/*.py",
-    "app/static/*"
+    "frontend/*"
 ]
 
 # Same as Black.

@@ -1,11 +1,11 @@
-// app/static/vite.config.js
+// frontend/vite.config.js
 
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-  root: '.', // Use the current directory (app/static) as root
+  root: '.', // Use the current directory (frontend/) as root
   base: '/',
   server: {
     open: false,

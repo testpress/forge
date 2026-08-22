@@ -23,7 +23,7 @@ def load_manifest() -> dict[str, dict[str, str]]:
     manifest_path = base_dir / getattr(
         settings,
         "VITE_MANIFEST_PATH",
-        "app/static/dist/.vite/manifest.json",
+        "frontend/dist/.vite/manifest.json",
     )
 
     if not manifest_path.exists():

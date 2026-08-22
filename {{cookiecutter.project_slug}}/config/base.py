@@ -72,6 +72,11 @@ MIGRATION_MODULES = {"app": "app.db.migrations"}
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # Must sit directly below SecurityMiddleware, per WhiteNoise's own
+    # install instructions, so it can serve static files (with far-future
+    # cache headers on their hashed names - see STORAGES in
+    # config/production.py) before anything else on the request path.
+    "whitenoise.middleware.WhiteNoiseMiddleware",
 {%- if cookiecutter.use_django_ninja == "y" %}
     # Must sit above CommonMiddleware so it can answer CORS preflight
     # requests before anything else redirects or rejects them.
@@ -150,16 +155,31 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = "static/"
+# Defaults to the app serving its own static files (via WhiteNoise - see
+# MIDDLEWARE above and STORAGES in config/production.py). To front them
+# with a CDN on its own domain instead (e.g. a CloudFront/Cloudflare zone
+# pulling from this app as its origin), set STATIC_URL to that domain,
+# e.g. "https://cdn.example.com/static/" - no other setting has to change,
+# since the static and vite_static template tags just build URLs from
+# this value.
+STATIC_URL = env("STATIC_URL", default="static/")
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# The Vite/Tailwind project lives in frontend/, outside any Django app's
+# own static/ folder on purpose: django.contrib.staticfiles's
+# AppDirectoriesFinder auto-collects every app's static/ directory
+# wholesale, and it can't tell frontend/'s raw, pre-build sources (which
+# reference bare package names like "tailwindcss" that only Vite can
+# resolve) from frontend/dist's actual build output. Keeping the project
+# root outside app/ means only the built dist/ - listed explicitly below -
+# is ever seen by collectstatic.
 STATICFILES_DIRS = [
-    BASE_DIR / "app/static/dist",
+    BASE_DIR / "frontend/dist",
 ]
 
 VITE_DEV_SERVER_URL = "http://localhost:5173"
 
-VITE_MANIFEST_PATH = "app/static/dist/.vite/manifest.json"
+VITE_MANIFEST_PATH = "frontend/dist/.vite/manifest.json"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

@@ -36,7 +36,7 @@ jobs:
           - name: ninja-channels-no-celery
             flags: "use_django_ninja=y use_channels=y use_celery=n"
           # use_preline swaps in extra Tailwind content sources and a
-          # Preline-specific JS import (app/static/js/main.js) - the only
+          # Preline-specific JS import (frontend/js/main.js) - the only
           # flag that changes the frontend build, so it needs its own
           # combination rather than relying on the default's "n".
           - name: preline
@@ -100,11 +100,11 @@ jobs:
       # the Tailwind v4 / Vite build - and, on the preline combination, the
       # Preline-specific content sources and JS import - end to end.
       - name: Install frontend dependencies
-        working-directory: testproj/app/static
+        working-directory: testproj/frontend
         run: npm install
 
       - name: Build frontend assets
-        working-directory: testproj/app/static
+        working-directory: testproj/frontend
         run: npm run build
 
       - name: Docker build (production target)

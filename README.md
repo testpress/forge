@@ -101,8 +101,8 @@ your_project_name/
 │   ├── models/            # Django models
 │   ├── tasks/             # Celery tasks (if enabled)
 │   ├── views/             # Django views
-│   ├── templates/         # Django templates
-│   └── static/            # Django static files
+│   └── templates/         # Django templates
+├── frontend/               # Vite/Tailwind project (package.json, css/, js/)
 ├── config/                # Project settings and configuration
 ├── docker/                # Container entrypoint script
 ├── docs/                  # Documentation

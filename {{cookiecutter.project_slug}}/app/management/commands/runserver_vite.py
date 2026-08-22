@@ -40,7 +40,7 @@ class Command(RunserverCommand):
 
             vite_process = subprocess.Popen(  # noqa: S603
                 [npm_path, "start"],
-                cwd=Path.cwd() / "app/static",
+                cwd=Path.cwd() / "frontend",
             )
             try:
                 logging.debug(
