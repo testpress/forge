@@ -79,6 +79,16 @@ tests/            # pytest suite; tests/factories (factory-boy), tests/mixins
 - REST API: `django-ninja` (Pydantic schemas, OpenAPI docs) — not DRF
 - Errors: `sentry-sdk` (only when `use_sentry=y`)
 - Images: `pillow`; DB driver: `psycopg[binary]`
+- Frontend build (`app/static/`): Vite + **Tailwind CSS v4**, wired via the
+  `@tailwindcss/vite` plugin — no `postcss.config.js`, no `autoprefixer`,
+  no `tailwind.config.js`; Tailwind config lives in `css/styles.css`
+  (`@import`/`@plugin`/`@source`). `@tailwindcss/forms` and
+  `@tailwindcss/typography` are still separate packages, loaded via
+  `@plugin` instead of `require()`; `@tailwindcss/aspect-ratio` and
+  `@tailwindcss/container-queries` are gone — v4 has both natively.
+  Preline UI (`use_preline=y`) is on its v4-compatible major, initialized
+  via `preline/non-auto` + `HSStaticMethods.autoInit()` rather than the
+  old side-effect `import 'preline'`.
 - Testing: `pytest` + `pytest-django` + `factory-boy` + `faker` +
   `pytest-mock` + `pytest-asyncio` + `pytest-xdist`
 - Redis is pinned `<6.5` deliberately (kombu's supported range via

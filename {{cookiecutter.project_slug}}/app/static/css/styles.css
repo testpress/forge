@@ -1,3 +1,15 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@plugin "@tailwindcss/forms";
+@plugin "@tailwindcss/typography";
+
+/* Explicit content sources: templates live outside app/static, so v4's
+   automatic detection (which walks up from this file) needs a nudge. */
+@source "../../templates/**/*.{html,js}";
+{% if cookiecutter.use_preline == 'y' %}
+
+/* Preline UI: variants/theme layers plus the JS it scans for utility usage. */
+@import "preline/variants.css";
+@source "../node_modules/preline/dist/*.js";
+@import "preline/theme.css";
+{% endif %}
