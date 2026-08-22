@@ -35,6 +35,12 @@ jobs:
           # Celery's models in the app registry.
           - name: ninja-channels-no-celery
             flags: "use_django_ninja=y use_channels=y use_celery=n"
+          # use_preline swaps in extra Tailwind content sources and a
+          # Preline-specific JS import (app/static/js/main.js) - the only
+          # flag that changes the frontend build, so it needs its own
+          # combination rather than relying on the default's "n".
+          - name: preline
+            flags: "use_preline=y"
     env:
       SECRET_KEY: ci-test-secret-key
       DATABASE_URL: sqlite:///db.sqlite3
@@ -83,6 +89,23 @@ jobs:
       - name: Run tests
         working-directory: testproj
         run: uv run pytest
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # No package-lock.json is committed (it's generated fresh per
+      # project), so this is a plain install rather than `npm ci`. Exercises
+      # the Tailwind v4 / Vite build - and, on the preline combination, the
+      # Preline-specific content sources and JS import - end to end.
+      - name: Install frontend dependencies
+        working-directory: testproj/app/static
+        run: npm install
+
+      - name: Build frontend assets
+        working-directory: testproj/app/static
+        run: npm run build
 
       - name: Docker build (production target)
         run: docker build -t testproj:ci testproj
