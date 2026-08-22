@@ -110,6 +110,15 @@ jobs:
       - name: Docker build (production target)
         run: docker build -t testproj:ci testproj
 
+      # Cheap correctness check for docker-compose.prod.yml, which is
+      # Jinja-templated the same as docker-compose.yml: catches a broken
+      # render (bad conditional, undefined var) per flag combination
+      # without paying for a full stack boot on every combination - that
+      # happens once, below, for the default combination.
+      - name: Validate docker-compose.prod.yml renders
+        working-directory: testproj
+        run: POSTGRES_PASSWORD=ci-placeholder docker compose -f docker-compose.prod.yml config >/dev/null
+
   docker-compose-smoke-test:
     runs-on: ubuntu-latest
     steps:
@@ -147,3 +156,53 @@ jobs:
         if: always()
         working-directory: testproj
         run: docker compose down -v
+
+  docker-compose-prod-smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v9.0.0
+        with:
+          enable-cache: true
+
+      - name: Bake default project
+        run: uvx cookiecutter --no-input . project_name="Testproj"
+
+      # docker-compose-smoke-test (above) only ever exercises config.local
+      # (DEBUG=True), which never runs the production STORAGES/collectstatic
+      # path - the actual runtime target for the production Dockerfile
+      # stage, WhiteNoise, and docker-compose.prod.yml. This is a separate
+      # job so the two can't quietly start reusing the same config by
+      # accident.
+      - name: Configure production .env
+        working-directory: testproj
+        run: |
+          sed -i 's/^DEBUG=True/DEBUG=False/' .env
+          echo "POSTGRES_PASSWORD=ci-placeholder" >> .env
+
+      - name: Start the production compose stack
+        working-directory: testproj
+        run: docker compose -f docker-compose.prod.yml up -d --build
+
+      - name: Wait for web to come up
+        working-directory: testproj
+        run: |
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8000/admin/login/ >/dev/null && exit 0
+            sleep 2
+          done
+          echo "web never became reachable"
+          docker compose -f docker-compose.prod.yml logs
+          exit 1
+
+      - name: Dump logs on failure
+        if: failure()
+        working-directory: testproj
+        run: docker compose -f docker-compose.prod.yml logs
+
+      - name: Tear down
+        if: always()
+        working-directory: testproj
+        run: docker compose -f docker-compose.prod.yml down -v

@@ -1,0 +1,95 @@
+{% set needs_redis = cookiecutter.use_celery == 'y' or cookiecutter.use_channels == 'y' -%}
+# Self-hosted production deploy: builds the `production` Dockerfile target
+# (no dev tooling, no source bind mount - the image is the deployable
+# artifact) and runs it detached. docker/entrypoint.sh already runs
+# `migrate` and `collectstatic` on every container start, so this one
+# command is the entire deploy:
+#
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# (Compose reads .env from the working directory automatically - no
+# --env-file flag needed - for both the ${VAR} substitutions below and
+# each service's env_file.) See scripts/deploy.sh for the same thing as a
+# single script. Put a
+# reverse proxy or CDN (see STATIC_URL in config/base.py) in front of the
+# `web` service for TLS termination and edge caching - this file only
+# starts the app and its data services.
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-{{ cookiecutter.project_slug }}}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env for production}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+{% if needs_redis %}
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+{% endif %}
+  web:
+    build:
+      context: .
+      target: production
+    image: {{ cookiecutter.project_slug }}:latest
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8000}:8000"
+    env_file:
+      - .env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.production
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-{{ cookiecutter.project_slug }}}
+{%- if cookiecutter.use_celery == 'y' %}
+      CELERY_BROKER_URL: redis://redis:6379/0
+{%- endif %}
+    depends_on:
+      db:
+        condition: service_healthy
+{%- if needs_redis %}
+      redis:
+        condition: service_healthy
+{%- endif %}
+{% if cookiecutter.use_celery == 'y' %}
+  worker:
+    build:
+      context: .
+      target: production
+    image: {{ cookiecutter.project_slug }}:latest
+    restart: unless-stopped
+    # Skip the image's entrypoint (migrate + collectstatic) - the web
+    # service already owns that, so running it again here concurrently
+    # races against it. The worker just needs the DB to be reachable.
+    entrypoint: []
+    command: celery -A config.celery worker --loglevel=info
+    env_file:
+      - .env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.production
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-{{ cookiecutter.project_slug }}}
+      CELERY_BROKER_URL: redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+{% endif %}
+volumes:
+  postgres_data:
+{%- if needs_redis %}
+  redis_data:
+{%- endif %}

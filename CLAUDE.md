@@ -102,6 +102,19 @@ tests/            # pytest suite; tests/factories (factory-boy), tests/mixins
   put a CDN (Cloudflare, CloudFront, …) in front as a caching reverse
   proxy rather than reaching for S3/GCS + django-storages. `STATIC_URL`
   is env-overridable if the CDN needs its own domain.
+  `WHITENOISE_IMMUTABLE_FILE_TEST` is widened to also match Vite's own
+  hash format (`name-HASH.ext`), not just Django's (`name.HASH.ext`) — a
+  file only gets the 10-year immutable `Cache-Control` if it matches.
+- Self-hosted production deploy: `docker-compose.prod.yml` +
+  `scripts/deploy.sh` (`./scripts/deploy.sh`, or equivalently
+  `docker compose -f docker-compose.prod.yml up -d --build`) — the
+  `production` Dockerfile target, no bind mounts, `restart:
+  unless-stopped`, safe to re-run for later deploys since
+  `docker/entrypoint.sh` migrates and collects static on every start.
+  Needs its own production `.env` (`DEBUG=False`, a real `SECRET_KEY`,
+  `ALLOWED_HOSTS`, `POSTGRES_PASSWORD`) — the one generated at project
+  creation is for local dev only. See the README's Production Deployment
+  section.
 - Testing: `pytest` + `pytest-django` + `factory-boy` + `faker` +
   `pytest-mock` + `pytest-asyncio` + `pytest-xdist`
 - Redis is pinned `<6.5` deliberately (kombu's supported range via

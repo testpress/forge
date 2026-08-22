@@ -110,8 +110,10 @@ your_project_name/
 ├── tests/                 # Test suite
 ├── .github/workflows/     # CI (ruff, mypy, djlint, migrations, pytest)
 ├── manage.py             # Django management script
-├── Dockerfile             # Multi-stage: dev (compose) and production targets
+├── Dockerfile             # Multi-stage: frontend, dev (compose) and production targets
 ├── docker-compose.yml     # Local dev stack: web, Postgres (+ Redis/worker)
+├── docker-compose.prod.yml # Production stack (see Production Deployment below)
+├── scripts/deploy.sh      # Single-command production deploy
 ├── pyproject.toml        # Project dependencies and tooling config
 └── uv.lock              # Locked dependencies
 ```
@@ -153,6 +155,43 @@ To build a production image standalone:
 ```bash
 docker build -t your_project_name .
 ```
+
+## Production Deployment
+
+`docker-compose.prod.yml` is the self-hosted deploy target: the
+`production` Dockerfile target (no dev tooling, no source bind mount —
+the built image is the deployable artifact), Postgres with a persisted
+volume, and — for whichever of Redis, Celery's worker, and Channels you
+enabled — those services too, all with `restart: unless-stopped`.
+
+1. Create a **production** `.env` (the one generated at project creation
+   is for local development only — `DEBUG=True`, SQLite, a permissive
+   `ALLOWED_HOSTS`). At minimum it needs:
+   ```
+   DEBUG=False
+   SECRET_KEY=<a real, unique secret>
+   ALLOWED_HOSTS=your-domain.com
+   POSTGRES_PASSWORD=<a real password>
+   ```
+   plus `SENTRY_DSN` (required if Sentry is enabled) and
+   `CORS_ALLOWED_ORIGINS` (if django-ninja is enabled). See
+   `config/production.py` for the full list.
+2. Deploy:
+   ```bash
+   ./scripts/deploy.sh
+   ```
+   which is exactly `docker compose -f docker-compose.prod.yml up -d --build`
+   — safe to re-run for later deploys, since Compose only rebuilds and
+   restarts what changed, and `docker/entrypoint.sh` runs `migrate` and
+   `collectstatic` on every container start.
+
+This starts the app on `${WEB_PORT:-8000}`; put a reverse proxy or CDN in
+front of it for TLS termination. Static files are served directly by the
+app via [WhiteNoise](https://whitenoise.readthedocs.io/) with
+content-hashed filenames and far-future cache headers (see `STATIC_URL`
+in `config/base.py`), so a CDN placed in front as a caching reverse proxy
+— Cloudflare, CloudFront, etc. — can cache them at the edge without any
+S3/GCS bucket in between; no separate static-asset pipeline to run.
 
 ## Continuous Integration
 
