@@ -37,6 +37,7 @@ def remove_background_task_files():
         "app/domain/background_task.py",
         "app/models/background_task.py",
         "app/admin/admin.py",
+        "tests/test_background_tasks.py",
     ):
         remove_path(path)
 
