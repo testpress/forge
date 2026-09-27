@@ -26,13 +26,14 @@ jobs:
             flags: "use_channels=y"
           - name: sentry
             flags: "use_sentry=y"
-          # Celery is the one flag that defaults to "y", so the
+          # use_celery (background tasks - Dramatiq, despite the name; see
+          # README) is the one flag that defaults to "y", so the
           # interesting case to cover is turning it off.
           - name: no-celery
             flags: "use_celery=n"
           # Two optional layers at once: the API must not conflict with
           # Channels' ASGI application, and both must survive without
-          # Celery's models in the app registry.
+          # the background-task models in the app registry.
           - name: ninja-channels-no-celery
             flags: "use_django_ninja=y use_channels=y use_celery=n"
           # use_preline swaps in extra Tailwind content sources and a

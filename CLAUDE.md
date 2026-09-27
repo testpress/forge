@@ -42,12 +42,12 @@ app/
 ├── forms/        # base form class + custom fields
 ├── helpers/      # custom template tags ONLY — every file here auto-loads as one
 ├── models/       # see BaseModel below
-├── tasks/        # Celery tasks (only if use_celery=y)
+├── tasks/        # Dramatiq actors (only if use_celery=y — see below)
 ├── templates/    # Django templates (Jinja profile for djlint)
 ├── utils/        # generic, non-app-specific helper functions
 └── views/        # Django views
 
-config/           # settings (base/local/production/test), asgi/wsgi, urls, celery.py
+config/           # settings (base/local/production/test), asgi/wsgi, urls, dramatiq.py
 frontend/         # Vite/Tailwind project (package.json, css/, js/) — see below
 tests/            # pytest suite; tests/factories (factory-boy), tests/mixins
 ```
@@ -74,7 +74,20 @@ tests/            # pytest suite; tests/factories (factory-boy), tests/mixins
 - Timestamps / audit history: `django-model-utils` (`TimeStampedModel`) +
   `django-simple-history`
 - Forms: `django-widget-tweaks`
-- Background tasks: `celery[redis]` (only when `use_celery=y`)
+- Background tasks: `dramatiq[redis]` (only when `use_celery=y` — the
+  flag kept its original name; see the README's Background tasks section
+  for why). `config/dramatiq.py` sets up the broker (Dramatiq has no
+  Celery-style automatic Django integration, so it calls `django.setup()`
+  itself) and registers `app/domain/background_task.py`'s
+  `BackgroundTaskMiddleware`, which replaces the old Celery signal
+  handlers with Dramatiq's `Middleware` hooks
+  (`after_enqueue`/`before_process_message`/`after_process_message`).
+  `dramatiq` ships its own types (`py.typed`) — no stub package needed,
+  unlike Celery which required `celery-types`. Actors default to
+  `max_retries=0` to match Celery's no-auto-retry behavior; raise it
+  deliberately to opt into Dramatiq's built-in retry/backoff. There is no
+  Dramatiq equivalent of Celery's task revocation — see the comment in
+  `app/domain/background_task.py` before reaching for one.
 - Realtime: `channels` + `channels-redis` + `daphne` (only when
   `use_channels=y`)
 - REST API: `django-ninja` (Pydantic schemas, OpenAPI docs) — not DRF
@@ -117,9 +130,9 @@ tests/            # pytest suite; tests/factories (factory-boy), tests/mixins
   section.
 - Testing: `pytest` + `pytest-django` + `factory-boy` + `faker` +
   `pytest-mock` + `pytest-asyncio` + `pytest-xdist`
-- Redis is pinned `<6.5` deliberately (kombu's supported range via
-  Celery's `[redis]` extra) — don't bump it past 6.4.x without checking
-  that constraint first.
+- Redis has no ceiling pin — `dramatiq[redis]` (`redis<9.0,>=4.0`) and
+  `channels-redis` (`redis>=4.6`) don't impose one the way Celery's kombu
+  transport used to, so it just tracks the latest release.
 
 ## Coding standards
 

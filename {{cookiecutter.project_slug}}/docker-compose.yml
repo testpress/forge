@@ -43,7 +43,7 @@ services:
       DJANGO_SETTINGS_MODULE: config.local
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-{{ cookiecutter.project_slug }}}
 {%- if cookiecutter.use_celery == 'y' %}
-      CELERY_BROKER_URL: redis://redis:6379/0
+      DRAMATIQ_BROKER_URL: redis://redis:6379/0
 {%- endif %}
     depends_on:
       db:
@@ -63,7 +63,7 @@ services:
     # concurrently races against it and can fail with duplicate-table
     # errors. The worker just needs the DB to be reachable.
     entrypoint: []
-    command: celery -A config.celery worker --loglevel=info
+    command: dramatiq config.dramatiq
     volumes:
       - .:/app
       - /app/.venv
@@ -72,7 +72,7 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: config.local
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-{{ cookiecutter.project_slug }}}
-      CELERY_BROKER_URL: redis://redis:6379/0
+      DRAMATIQ_BROKER_URL: redis://redis:6379/0
     depends_on:
       db:
         condition: service_healthy

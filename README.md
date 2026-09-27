@@ -15,7 +15,7 @@ A modern, well-structured Django project template that helps you quickly set up 
 - 📦 uv for dependency management
 - 🔄 Optional WebSocket support with Django Channels
 - 🚀 Optional REST API with django-ninja (Pydantic schemas, OpenAPI docs)
-- ⏱️ Optional background tasks with Celery + Redis
+- ⏱️ Optional background tasks with Dramatiq + Redis
 - 🐳 Docker + docker-compose for local development
 - ✅ GitHub Actions CI (lint, type-check, migrations check, tests)
 
@@ -46,7 +46,7 @@ cookiecutter https://github.com/testpress/forge.git
      - Sentry error tracking
      - Django Channels for WebSocket support
      - django-ninja for a REST API
-     - Celery + Redis for background tasks (the one option that defaults
+     - Dramatiq + Redis for background tasks (the one option that defaults
        to "y"; answer "n" to keep the project free of a Redis dependency)
 
 3. Navigate to your new project directory:
@@ -76,8 +76,8 @@ uv run python manage.py runserver
 ```
 
 Alternatively, skip steps 4-7 and run everything (Django, Postgres, and —
-if you enabled Celery or Channels — Redis and a worker) with Docker Compose
-instead:
+if you enabled background tasks or Channels — Redis and a worker) with
+Docker Compose instead:
 
 ```bash
 cd your_project_name
@@ -99,7 +99,7 @@ your_project_name/
 │   │   ├── routers/       # API route modules
 │   │   └── schemas/       # Pydantic schemas
 │   ├── models/            # Django models
-│   ├── tasks/             # Celery tasks (if enabled)
+│   ├── tasks/             # Dramatiq actors (if enabled)
 │   ├── views/             # Django views
 │   └── templates/         # Django templates
 ├── frontend/               # Vite/Tailwind project (package.json, css/, js/)
@@ -136,7 +136,7 @@ your_project_name/
 | `web`    | always | Django dev server (`config.local`, `DEBUG=True`, autoreload via bind mount) on port 8000 |
 | `db`     | always | Postgres 17 on port 5432 (credentials via `POSTGRES_*` env vars, default `postgres`/`postgres`) |
 | `redis`  | `use_celery` or `use_channels` | Redis 7 on port 6379 |
-| `worker` | `use_celery` | Celery worker, same image, no autoreload |
+| `worker` | `use_celery` | Dramatiq worker, same image, no autoreload |
 
 The image is a multi-stage `Dockerfile` with two targets:
 - `dev` (what `docker-compose.yml` builds) — installs dev dependencies too
@@ -161,8 +161,8 @@ docker build -t your_project_name .
 `docker-compose.prod.yml` is the self-hosted deploy target: the
 `production` Dockerfile target (no dev tooling, no source bind mount —
 the built image is the deployable artifact), Postgres with a persisted
-volume, and — for whichever of Redis, Celery's worker, and Channels you
-enabled — those services too, all with `restart: unless-stopped`.
+volume, and — for whichever of Redis, the Dramatiq worker, and Channels
+you enabled — those services too, all with `restart: unless-stopped`.
 
 1. Create a **production** `.env` (the one generated at project creation
    is for local development only — `DEBUG=True`, SQLite, a permissive
@@ -255,29 +255,37 @@ the same developer experience (type hints, Pydantic, generated OpenAPI
 docs) while running as ordinary Django, so authentication, middleware,
 models and tests are all shared with the rest of the project.
 
-### Background tasks (Celery + Redis)
+### Background tasks (Dramatiq + Redis)
 If you selected "y" for `use_celery` (the default), the template includes:
-- A configured Celery app in `config/celery.py`
-- Example tasks in `app/tasks/`
+- A configured Dramatiq broker in `config/dramatiq.py`
+- Example actors in `app/tasks/`
 - A `BackgroundTask` model recording each run's status, progress events and
-  output files, plus the signal handlers that keep it up to date
+  output files, plus the middleware that keeps it up to date
 - A `worker` and `redis` service in `docker-compose.yml`
+
+(The flag is still called `use_celery` — it originally set up Celery;
+see the note below on why it wasn't renamed when the implementation
+switched to Dramatiq.)
 
 Run a worker with:
 ```bash
-uv run celery -A config.celery worker --loglevel=info
+uv run dramatiq config.dramatiq
 ```
 
-Answer "n" and none of the above is generated — no `celery`/`redis`
+Answer "n" and none of the above is generated — no `dramatiq`/`redis`
 dependency, no broker to run, no Redis service in Compose.
 
 > **Why this flag defaults to "y" when every other optional flag defaults
 > to "n":** the others are additive, so "n" gives you what the template
-> always gave you. Celery was unconditional before it was put behind a
-> flag, so defaulting it off would change what an existing user's bake
-> produces — silently dropping models and a migration from a project that
-> re-runs the template expecting continuity. Defaulting to "y" keeps the
-> default output unchanged and makes opting out a deliberate choice.
+> always gave you. Background tasks were unconditional (on Celery) before
+> being put behind a flag, so defaulting it off would change what an
+> existing user's bake produces — silently dropping models and a
+> migration from a project that re-runs the template expecting
+> continuity. Defaulting to "y" keeps the default output unchanged and
+> makes opting out a deliberate choice. The same reasoning is why the
+> flag kept its `use_celery` name after the underlying library moved to
+> Dramatiq: renaming it would silently stop honoring an existing
+> `use_celery=n` in anyone's saved cookiecutter context or CI script.
 > (`cookiecutter.json` is strict JSON and cannot carry comments, which is
 > why this note lives here.)
 

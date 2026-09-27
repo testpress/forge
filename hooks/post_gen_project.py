@@ -24,14 +24,14 @@ def remove_api_files():
         remove_path(path)
 
 
-def remove_celery_files():
-    """Drop the Celery layer when background tasks are disabled.
+def remove_background_task_files():
+    """Drop the background-tasks layer when it's disabled.
 
-    These modules import celery and register the BackgroundTask models, so
-    they cannot stay in a project generated without the flag.
+    These modules import dramatiq and register the BackgroundTask models,
+    so they cannot stay in a project generated without the flag.
     """
     for path in (
-        "config/celery.py",
+        "config/dramatiq.py",
         "app/tasks",
         "app/views/ping.py",
         "app/domain/background_task.py",
@@ -68,9 +68,9 @@ ALLOWED_HOSTS=localhost,127.0.0.1
 SENTRY_DSN=
 {% endif %}
 {% if cookiecutter.use_celery == 'y' %}
-# Celery
+# Background tasks (Dramatiq)
 # ------------------------------------------------------------------------------
-CELERY_BROKER_URL=redis://localhost:6379/0
+DRAMATIQ_BROKER_URL=redis://localhost:6379/0
 {% endif %}
 {% if cookiecutter.use_django_ninja == 'y' %}
 # API
@@ -117,18 +117,18 @@ def setup_project():
     {% endif %}
 
     {% if cookiecutter.use_celery != 'y' %}
-    print("Removing Celery files (background tasks not selected)...")
-    remove_celery_files()
+    print("Removing background-task files (not selected)...")
+    remove_background_task_files()
     {% endif %}
 
     print("Installing dependencies with uv...")
     run_command("uv sync --extra dev")
 
-    # Jinja conditionals (e.g. optional Sentry/API/Channels/Celery blocks,
-    # and the raw-block escaping templates need around Django template tags)
-    # can leave stray blank lines or unsorted imports behind depending on
-    # which options were chosen. Auto-fix and format so the project starts
-    # clean regardless of which flags were selected.
+    # Jinja conditionals (e.g. optional Sentry/API/Channels/background-task
+    # blocks, and the raw-block escaping templates need around Django
+    # template tags) can leave stray blank lines or unsorted imports behind
+    # depending on which options were chosen. Auto-fix and format so the
+    # project starts clean regardless of which flags were selected.
     print("Formatting generated project with ruff...")
     run_command_best_effort("uv run ruff check --fix .")
     run_command_best_effort("uv run ruff format .")
@@ -146,8 +146,8 @@ def setup_project():
     {% endif %}
 
     {% if cookiecutter.use_celery == 'y' %}
-    print("Background tasks enabled (Celery + Redis).")
-    print("Start a worker with: uv run celery -A config.celery worker -l info")
+    print("Background tasks enabled (Dramatiq + Redis).")
+    print("Start a worker with: uv run dramatiq config.dramatiq")
     {% endif %}
 
     print("Setup complete.")

@@ -48,24 +48,21 @@ dependencies = [
     {% endif %}
     {% if cookiecutter.use_celery == "y" %}
     # Optional background tasks. Declared with the [redis] extra so that
-    # kombu's supported redis range is applied by the resolver rather than
-    # matched by hand - see the redis pin below.
-    "celery[redis]==5.6.3",
+    # dramatiq's supported redis range is applied by the resolver rather
+    # than matched by hand - see the redis pin below.
+    "dramatiq[redis]==2.2.1",
     {% endif %}
     {% if cookiecutter.use_celery == "y" or cookiecutter.use_channels == "y" %}
-    # The redis client backs two different things - Celery's broker and
+    # The redis client backs two different things - Dramatiq's broker and
     # channels-redis's channel layer - so it is gated on either flag,
     # mirroring how docker-compose.yml gates the redis service. Without
     # the "or", a Channels-only project would still get redis pulled in
     # transitively by channels-redis, but unpinned.
     #
-    # Held below 6.5 deliberately: kombu (Celery's transport) declares
-    # `redis!=4.5.5,!=5.0.2,<6.5,>=4.5.2`, and because celery is declared
-    # with its [redis] extra above, that ceiling is now enforced by the
-    # resolver. Raising this past 6.4.x fails the lock outright instead of
-    # silently producing a combination Celery does not support. 6.4.0 is
-    # the newest release inside the range; revisit when kombu lifts it.
-    "redis==6.4.0",
+    # Unlike Celery's kombu transport, neither dramatiq[redis] (`redis<9.0,
+    # >=4.0`) nor channels-redis (`redis>=4.6`) impose a ceiling here, so
+    # this just tracks the latest release rather than being held below one.
+    "redis==8.1.0",
     {% endif %}
 ]
 
@@ -87,12 +84,6 @@ dev = [
     "pytest-mock==3.14.1",
     "factory-boy==3.3.3",
     "types-factory-boy==0.4.1",
-    {% if cookiecutter.use_celery == "y" %}
-    # Celery ships no type information, so every @shared_task and
-    # @task_*.connect decorator is untyped and silently untypes the
-    # function it decorates. These stubs restore that.
-    "celery-types==0.26.0",
-    {% endif %}
     "faker==37.3.0",
     "pytest-xdist==3.7.0",
     "pytest-env==1.1.5",

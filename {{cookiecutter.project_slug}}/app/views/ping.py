@@ -8,6 +8,6 @@ from app.tasks import ping
 @csrf_exempt
 def trigger_ping_task(request: HttpRequest) -> JsonResponse:
     if request.method == "POST":
-        result = ping.delay()
-        return JsonResponse({"task_id": result.id})
+        message = ping.send()
+        return JsonResponse({"task_id": message.message_id})
     return JsonResponse({"error": "Only POST allowed"}, status=405)

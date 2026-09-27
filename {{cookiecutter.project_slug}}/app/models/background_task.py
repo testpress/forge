@@ -10,19 +10,18 @@ class TaskStatus(models.IntegerChoices):
     STARTED = 2, "Started"
     SUCCESS = 3, "Success"
     FAILURE = 4, "Failure"
+    # Set by nothing here either: a Dramatiq retry (see max_retries on
+    # app.tasks' actors) re-runs the RECEIVED/STARTED/FAILURE-or-SUCCESS
+    # cycle under the same task_id rather than passing through a distinct
+    # "retrying" state, so this row's status always reflects the most
+    # recent attempt. Left for a project that wants to track retries
+    # explicitly.
     RETRY = 5, "Retry"
+    # Dramatiq has no built-in way to cancel a pending or in-flight
+    # message the way Celery's revoke does - nothing sets this status
+    # today. Left in place as an extension point for
+    # https://pypi.org/project/dramatiq-abort/, which does add that.
     REVOKED = 6, "Revoked"
-
-
-CELERY_STATE_MAP = {
-    "PENDING": TaskStatus.PENDING,
-    "RECEIVED": TaskStatus.RECEIVED,
-    "STARTED": TaskStatus.STARTED,
-    "SUCCESS": TaskStatus.SUCCESS,
-    "FAILURE": TaskStatus.FAILURE,
-    "RETRY": TaskStatus.RETRY,
-    "REVOKED": TaskStatus.REVOKED,
-}
 
 
 class BackgroundTask(BaseModel):

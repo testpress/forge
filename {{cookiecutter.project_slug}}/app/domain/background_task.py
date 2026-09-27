@@ -1,14 +1,9 @@
 from typing import TYPE_CHECKING
 from typing import Any
 
-from celery.signals import task_failure
-from celery.signals import task_prerun
-from celery.signals import task_received
-from celery.signals import task_revoked
-from celery.signals import task_success
+import dramatiq
 from django.utils.timezone import now
 
-from app.models import CELERY_STATE_MAP
 from app.models import BackgroundTask
 from app.models import BackgroundTaskEvent
 from app.models import BackgroundTaskFile
@@ -16,6 +11,10 @@ from app.models import EventType
 from app.models import TaskStatus
 
 if TYPE_CHECKING:
+    from dramatiq.broker import Broker
+    from dramatiq.broker import MessageProxy
+    from dramatiq.message import Message
+
     from django.core.files import File
 
 
@@ -64,59 +63,89 @@ def log_task_event(
     BackgroundTaskEvent.objects.create(task=task, event=event, message=message)
 
 
-def update_status(task_id: str, celery_state: str, **kwargs: Any) -> None:
-    status = CELERY_STATE_MAP.get(celery_state, TaskStatus.PENDING)
+def update_status(task_id: str, status: TaskStatus, **kwargs: Any) -> None:
     BackgroundTask.objects.filter(task_id=task_id).update(status=status, **kwargs)
 
 
-@task_received.connect
-def task_received_handler(
-    sender: Any = None, request: Any = None, **kwargs: Any
-) -> None:
-    if not request:
-        return
-    task_id = request.id
-    name = request.name
-    log_task_event(task_id, name, event=EventType.RECEIVED, message="Task received")
-    update_status(task_id, "RECEIVED")
+class BackgroundTaskMiddleware(dramatiq.Middleware):
+    """Keeps BackgroundTask/BackgroundTaskEvent in sync with actor runs.
 
+    Registered on the broker in config/dramatiq.py. This is Dramatiq's
+    equivalent of what used to be five `@signal.connect` handlers on
+    Celery's task_received/task_prerun/task_success/task_failure/
+    task_revoked - Dramatiq exposes the same kind of lifecycle events, but
+    as hooks on a single Middleware subclass instead of standalone
+    signals, and the hooks themselves don't line up one-to-one:
 
-@task_prerun.connect
-def task_prerun_handler(task_id: str, task: Any, **kwargs: Any) -> None:
-    log_task_event(task_id, task.name, event=EventType.STARTED, message="Task started")
-    update_status(task_id, "STARTED", started_at=now())
+    - There's no worker-side "received but not yet running" moment
+      distinct from "about to run" the way Celery split task_received
+      from task_prerun - before_process_message already covers both.
+      RECEIVED is logged from after_enqueue instead, which fires in
+      whichever process calls `.send()` (a view, another task, or
+      Dramatiq's own Retries middleware scheduling a retry) the moment
+      the message is handed to the broker - the closest equivalent this
+      side of the queue has to offer, and it fires again on every retry.
+    - task_success/task_failure become one hook, after_process_message,
+      distinguished by whether `exception` is set.
+    - task_revoked has no equivalent at all: Dramatiq has no built-in way
+      to cancel a pending or in-flight message. TaskStatus.REVOKED/
+      EventType.REVOKED are left on the model for a project that adds
+      https://pypi.org/project/dramatiq-abort/ to get that back.
+    """
 
+    def after_enqueue(
+        self,
+        broker: "Broker",
+        message: "Message[Any]",
+        delay: int | None,
+    ) -> None:
+        log_task_event(
+            message.message_id,
+            message.actor_name,
+            event=EventType.RECEIVED,
+            message="Task received",
+        )
+        update_status(message.message_id, TaskStatus.RECEIVED)
 
-@task_success.connect
-def task_success_handler(sender: Any, result: Any, **kwargs: Any) -> None:
-    log_task_event(
-        sender.request.id,
-        sender.name,
-        event=EventType.SUCCEEDED,
-        message="Task succeeded",
-    )
-    update_status(sender.request.id, "SUCCESS", finished_at=now())
+    def before_process_message(
+        self,
+        broker: "Broker",
+        message: "MessageProxy",
+    ) -> None:
+        log_task_event(
+            message.message_id,
+            message.actor_name,
+            event=EventType.STARTED,
+            message="Task started",
+        )
+        update_status(message.message_id, TaskStatus.STARTED, started_at=now())
 
-
-@task_failure.connect
-def task_failure_handler(
-    sender: Any, task_id: str, exception: Exception, **kwargs: Any
-) -> None:
-    log_task_event(
-        task_id,
-        sender.name,
-        event=EventType.FAILED,
-        message=f"Task failed: {exception}",
-    )
-    update_status(task_id, "FAILURE", finished_at=now(), exception=str(exception))
-
-
-@task_revoked.connect
-def task_revoked_handler(sender: Any, **kwargs: Any) -> None:
-    log_task_event(
-        sender.request.id,
-        sender.name,
-        event=EventType.REVOKED,
-        message="Task revoked",
-    )
-    update_status(sender.request.id, "REVOKED", finished_at=now())
+    def after_process_message(
+        self,
+        broker: "Broker",
+        message: "MessageProxy",
+        *,
+        result: Any = None,
+        exception: BaseException | None = None,
+    ) -> None:
+        if exception is None:
+            log_task_event(
+                message.message_id,
+                message.actor_name,
+                event=EventType.SUCCEEDED,
+                message="Task succeeded",
+            )
+            update_status(message.message_id, TaskStatus.SUCCESS, finished_at=now())
+        else:
+            log_task_event(
+                message.message_id,
+                message.actor_name,
+                event=EventType.FAILED,
+                message=f"Task failed: {exception}",
+            )
+            update_status(
+                message.message_id,
+                TaskStatus.FAILURE,
+                finished_at=now(),
+                exception=str(exception),
+            )
