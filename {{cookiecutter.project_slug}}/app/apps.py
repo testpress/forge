@@ -4,7 +4,7 @@ from django.apps import AppConfig
 class {{ cookiecutter.project_slug.replace('_', ' ').title().replace(' ', '') }}Config(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "app"
-{% if cookiecutter.use_celery == 'y' %}
+{% if cookiecutter.use_dramatiq == 'y' %}
     def ready(self) -> None:
         # Importing for the side effect of configuring the Dramatiq broker
         # (config.dramatiq calls dramatiq.set_broker(...) at import time)

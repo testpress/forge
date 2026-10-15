@@ -58,7 +58,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],
+            "hosts": [env("CHANNEL_LAYER_URL", default="redis://localhost:6379/0")],
         },
     },
 }
@@ -190,7 +190,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-user-model
 AUTH_USER_MODEL = "app.User"
 
-{% if cookiecutter.use_celery == "y" -%}
+{% if cookiecutter.use_dramatiq == "y" -%}
 # Background tasks (Dramatiq)
 # ------------------------------------------------------------------------------
 DRAMATIQ_BROKER_URL = env("DRAMATIQ_BROKER_URL", default="redis://localhost:6379/0")

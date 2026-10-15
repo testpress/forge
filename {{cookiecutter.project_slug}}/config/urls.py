@@ -24,7 +24,7 @@ from django.urls import path
 {% if cookiecutter.use_django_ninja == 'y' %}
 from app.api.urls import api
 {% endif %}
-{% if cookiecutter.use_celery == 'y' %}
+{% if cookiecutter.use_dramatiq == 'y' %}
 from app.views.ping import trigger_ping_task
 {% endif %}
 
@@ -33,7 +33,7 @@ from app.views.ping import trigger_ping_task
 # then reject the URLPattern entries appended under `if settings.DEBUG`.
 urlpatterns: list[URLPattern | URLResolver] = [
     path("admin/", admin.site.urls),
-{%- if cookiecutter.use_celery == 'y' %}
+{%- if cookiecutter.use_dramatiq == 'y' %}
     path("ping-task/", trigger_ping_task, name="ping-task"),
 {%- endif %}
 {%- if cookiecutter.use_django_ninja == 'y' %}

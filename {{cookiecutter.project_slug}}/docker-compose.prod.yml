@@ -1,4 +1,4 @@
-{% set needs_redis = cookiecutter.use_celery == 'y' or cookiecutter.use_channels == 'y' -%}
+{% set needs_valkey = cookiecutter.use_dramatiq == 'y' or cookiecutter.use_channels == 'y' -%}
 # Self-hosted production deploy: builds the `production` Dockerfile target
 # (no dev tooling, no source bind mount - the image is the deployable
 # artifact) and runs it detached. docker/entrypoint.sh already runs
@@ -29,14 +29,14 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-{% if needs_redis %}
-  redis:
-    image: redis:7-alpine
+{% if needs_valkey %}
+  valkey:
+    image: valkey/valkey:8-alpine
     restart: unless-stopped
     volumes:
-      - redis_data:/data
+      - valkey_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "valkey-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -54,17 +54,20 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: config.production
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-{{ cookiecutter.project_slug }}}
-{%- if cookiecutter.use_celery == 'y' %}
-      DRAMATIQ_BROKER_URL: redis://redis:6379/0
+{%- if cookiecutter.use_channels == 'y' %}
+      CHANNEL_LAYER_URL: redis://valkey:6379/0
+{%- endif %}
+{%- if cookiecutter.use_dramatiq == 'y' %}
+      DRAMATIQ_BROKER_URL: redis://valkey:6379/0
 {%- endif %}
     depends_on:
       db:
         condition: service_healthy
-{%- if needs_redis %}
-      redis:
+{%- if needs_valkey %}
+      valkey:
         condition: service_healthy
 {%- endif %}
-{% if cookiecutter.use_celery == 'y' %}
+{% if cookiecutter.use_dramatiq == 'y' %}
   worker:
     build:
       context: .
@@ -81,15 +84,15 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: config.production
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-{{ cookiecutter.project_slug }}}
-      DRAMATIQ_BROKER_URL: redis://redis:6379/0
+      DRAMATIQ_BROKER_URL: redis://valkey:6379/0
     depends_on:
       db:
         condition: service_healthy
-      redis:
+      valkey:
         condition: service_healthy
 {% endif %}
 volumes:
   postgres_data:
-{%- if needs_redis %}
-  redis_data:
+{%- if needs_valkey %}
+  valkey_data:
 {%- endif %}

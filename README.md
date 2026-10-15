@@ -15,7 +15,7 @@ A modern, well-structured Django project template that helps you quickly set up 
 - 📦 uv for dependency management
 - 🔄 Optional WebSocket support with Django Channels
 - 🚀 Optional REST API with django-ninja (Pydantic schemas, OpenAPI docs)
-- ⏱️ Optional background tasks with Dramatiq + Redis
+- ⏱️ Optional background tasks with Dramatiq + Valkey
 - 🐳 Docker + docker-compose for local development
 - ✅ GitHub Actions CI (lint, type-check, migrations check, tests)
 
@@ -46,11 +46,10 @@ cookiecutter https://github.com/testpress/forge.git
      - Sentry error tracking
      - Django Channels for WebSocket support
      - django-ninja for a REST API
-     - Dramatiq + Redis for background tasks (`use_celery`, default "y";
-       the option retains its legacy name, but uses Dramatiq)
+     - Dramatiq + Valkey for background tasks (`use_dramatiq`, default "y")
 
-   Redis is included when background tasks or Django Channels are enabled.
-   Disable both to generate a project without Redis.
+   Valkey is included when background tasks or Django Channels are enabled.
+   Disable both to generate a project without Valkey.
 
 3. Navigate to your new project directory:
 ```bash
@@ -79,7 +78,7 @@ uv run python manage.py runserver
 ```
 
 Alternatively, skip steps 4-7 and run Django and Postgres with Docker
-Compose instead. Redis is included when background tasks or Channels are
+Compose instead. Valkey is included when background tasks or Channels are
 enabled; a Dramatiq worker is included only when background tasks are enabled:
 
 ```bash
@@ -114,7 +113,7 @@ your_project_name/
 ├── .github/workflows/     # CI (ruff, mypy, djlint, migrations, pytest)
 ├── manage.py             # Django management script
 ├── Dockerfile             # Multi-stage: frontend, dev (compose) and production targets
-├── docker-compose.yml     # Local dev stack: web, Postgres (+ Redis/worker)
+├── docker-compose.yml     # Local dev stack: web, Postgres (+ Valkey/worker)
 ├── docker-compose.prod.yml # Production stack (see Production Deployment below)
 ├── scripts/deploy.sh      # Single-command production deploy
 ├── pyproject.toml        # Project dependencies and tooling config
@@ -140,8 +139,8 @@ your_project_name/
 |----------|------|------------|
 | `web`    | always | Django dev server (`config.local`, `DEBUG=True`, autoreload via bind mount) on port 8000 |
 | `db`     | always | Postgres 17 on port 5432 (credentials via `POSTGRES_*` env vars, default `postgres`/`postgres`) |
-| `redis`  | `use_celery` or `use_channels` | Redis 7 on port 6379 |
-| `worker` | `use_celery` | Dramatiq worker, same image, no autoreload |
+| `valkey` | `use_dramatiq` or `use_channels` | Valkey 8 on port 6379 |
+| `worker` | `use_dramatiq` | Dramatiq worker, same image, no autoreload |
 
 The image is a multi-stage `Dockerfile` with two targets:
 - `dev` (what `docker-compose.yml` builds) — installs dev dependencies too
@@ -166,7 +165,7 @@ docker build -t your_project_name .
 `docker-compose.prod.yml` is the self-hosted deploy target: the
 `production` Dockerfile target (no dev tooling, no source bind mount —
 the built image is the deployable artifact), Postgres with a persisted
-volume, and — for whichever of Redis, the Dramatiq worker, and Channels
+volume, and — for whichever of Valkey, the Dramatiq worker, and Channels
 you enabled — those services too, all with `restart: unless-stopped`.
 
 1. Create a **production** `.env` (the one generated at project creation
@@ -222,12 +221,12 @@ If you selected "y" for `use_sentry`, the template includes Sentry configuration
 ### Django Channels
 If you selected "y" for `use_channels`, the template includes:
 - Django Channels for WebSocket support
-- Redis channel layer configuration
+- Valkey-backed channel layer configuration
 - ASGI application setup
 - Example WebSocket consumer structure
 
 To use WebSockets:
-1. Make sure Redis is running on localhost:6379
+1. Make sure Valkey is running on localhost:6379 (or set `CHANNEL_LAYER_URL`)
 2. Add your WebSocket consumers in `app/consumers.py`
 3. Configure WebSocket routing in `config/asgi.py`
 4. Run the server with Daphne: `uv run daphne config.asgi:application`
@@ -260,43 +259,39 @@ the same developer experience (type hints, Pydantic, generated OpenAPI
 docs) while running as ordinary Django, so authentication, middleware,
 models and tests are all shared with the rest of the project.
 
-### Background tasks (Dramatiq + Redis)
+### Valkey
 
-Forge uses **Dramatiq**, with Redis as its broker, for background tasks.
-Celery is not installed or used. The Cookiecutter option is still named
-`use_celery` to preserve compatibility with saved configurations and CI scripts.
+Both Compose stacks use `valkey/valkey:8-alpine`, with a `valkey` service
+and a `valkey_data` volume in production. Python integrations use the
+`redis` client, Dramatiq's `RedisBroker`, and `channels_redis`; connection
+URLs use the `redis://` protocol supported by those libraries.
 
-If you selected "y" for `use_celery` (the default), the template includes:
+For local services, `DRAMATIQ_BROKER_URL` and `CHANNEL_LAYER_URL` default
+to `redis://localhost:6379/0` when their integrations are enabled. Both
+Compose stacks point them at `redis://valkey:6379/0` inside the containers.
+
+### Background tasks (Dramatiq + Valkey)
+
+Forge uses **Dramatiq**, with Valkey as its broker, for background tasks.
+Enable it with the `use_dramatiq` Cookiecutter option (default "y").
+
+If you selected "y" for `use_dramatiq` (the default), the template includes:
 
 - A configured Dramatiq broker in `config/dramatiq.py`
 - Example actors in `app/tasks/`
 - A `BackgroundTask` model recording each run's status, progress events and
   output files, plus the middleware that keeps it up to date
-- A `worker` and `redis` service in `docker-compose.yml`
+- A `worker` and `valkey` service in `docker-compose.yml`
 
-With Redis running, start a worker with:
+With Valkey running, start a worker with:
 
 ```bash
 uv run dramatiq config.dramatiq
 ```
 
 Answer "n" to omit the Dramatiq dependency, broker configuration, task
-models, example actors, and worker service. Redis is still included if
+models, example actors, and worker service. Valkey is still included if
 Django Channels is enabled.
-
-> **Why this flag defaults to "y" when every other optional flag defaults
-> to "n":** the others are additive, so "n" gives you what the template
-> always gave you. Background tasks were unconditional (on Celery) before
-> being put behind a flag, so defaulting it off would change what an
-> existing user's bake produces — silently dropping models and a
-> migration from a project that re-runs the template expecting
-> continuity. Defaulting to "y" keeps the default output unchanged and
-> makes opting out a deliberate choice. The same reasoning is why the
-> flag kept its `use_celery` name after the underlying library moved to
-> Dramatiq: renaming it would silently stop honoring an existing
-> `use_celery=n` in anyone's saved cookiecutter context or CI script.
-> (`cookiecutter.json` is strict JSON and cannot carry comments, which is
-> why this note lives here.)
 
 ## Contributing
 

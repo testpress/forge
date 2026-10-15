@@ -16,5 +16,5 @@
   "use_sentry": "n",
   "use_channels": "n",
   "use_django_ninja": "n",
-  "use_celery": "y"
+  "use_dramatiq": "y"
 }

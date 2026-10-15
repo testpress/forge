@@ -80,16 +80,16 @@ class DjangoDBMiddleware(dramatiq.Middleware):
 # dramatiq ships py.typed, but RedisBroker.__init__ itself has no
 # parameter annotations (it's `def __init__(self, *, url=None, ...)`),
 # which mypy's strict mode still treats as an untyped call.
-redis_broker = RedisBroker(  # type: ignore[no-untyped-call]
+valkey_broker = RedisBroker(  # type: ignore[no-untyped-call]
     url=settings.DRAMATIQ_BROKER_URL,
 )
-redis_broker.add_middleware(DjangoDBMiddleware())
+valkey_broker.add_middleware(DjangoDBMiddleware())
 # Exposes CurrentMessage.get_current_message() inside an actor - the
 # Dramatiq equivalent of Celery's `self.request` on a bound task. Not
 # enabled by default, unlike the two middlewares above it.
-redis_broker.add_middleware(CurrentMessage())
-redis_broker.add_middleware(BackgroundTaskMiddleware())
-dramatiq.set_broker(redis_broker)
+valkey_broker.add_middleware(CurrentMessage())
+valkey_broker.add_middleware(BackgroundTaskMiddleware())
+dramatiq.set_broker(valkey_broker)
 
 # Import every actor module so its @dramatiq.actor-decorated functions
 # register with the broker above - the Dramatiq equivalent of Celery's

@@ -46,16 +46,16 @@ dependencies = [
     # through the WSGI/gunicorn path the plain template uses.
     "uvicorn[standard]==0.52.1",
     {% endif %}
-    {% if cookiecutter.use_celery == "y" %}
+    {% if cookiecutter.use_dramatiq == "y" %}
     # Optional background tasks. Declared with the [redis] extra so that
     # dramatiq's supported redis range is applied by the resolver rather
     # than matched by hand - see the redis pin below.
     "dramatiq[redis]==2.2.1",
     {% endif %}
-    {% if cookiecutter.use_celery == "y" or cookiecutter.use_channels == "y" %}
+    {% if cookiecutter.use_dramatiq == "y" or cookiecutter.use_channels == "y" %}
     # The redis client backs two different things - Dramatiq's broker and
     # channels-redis's channel layer - so it is gated on either flag,
-    # mirroring how docker-compose.yml gates the redis service. Without
+    # mirroring how docker-compose.yml gates the valkey service. Without
     # the "or", a Channels-only project would still get redis pulled in
     # transitively by channels-redis, but unpinned.
     #

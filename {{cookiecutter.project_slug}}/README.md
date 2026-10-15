@@ -37,23 +37,23 @@ server to start. With `runserver` up:
 Authentication uses `django.contrib.auth`, with bearer tokens signed by
 Django's own `SECRET_KEY`. See `app/api/README.md` for the endpoint list
 and details.
-{% endif %}{% if cookiecutter.use_celery == 'y' %}
+{% endif %}{% if cookiecutter.use_dramatiq == 'y' %}
 ## Background tasks
 
-Celery is wired up in `config/celery.py`, with tasks in `app/tasks/` and a
+Dramatiq is wired up in `config/dramatiq.py`, with actors in `app/tasks/` and a
 `BackgroundTask` model that records each run's status, progress events and
 any output files. Run a worker alongside the dev server:
 
 ```bash
-celery -A config.celery worker --loglevel=info
+uv run dramatiq config.dramatiq
 ```
 
-This needs a Redis broker; `docker compose up` starts one for you, or set
-`CELERY_BROKER_URL` to point somewhere else.
+This needs a Valkey broker; `docker compose up` starts one for you, or set
+`DRAMATIQ_BROKER_URL` to point somewhere else.
 {% endif %}
 ## Docker
 
-Alternatively, run everything (this app, Postgres{% if cookiecutter.use_celery == 'y' or cookiecutter.use_channels == 'y' %}, Redis{% endif %}{% if cookiecutter.use_celery == 'y' %}, and a Celery
+Alternatively, run everything (this app, Postgres{% if cookiecutter.use_dramatiq == 'y' or cookiecutter.use_channels == 'y' %}, Valkey{% endif %}{% if cookiecutter.use_dramatiq == 'y' %}, and a Dramatiq
 worker{% endif %}) with Docker Compose:
 
 ```bash
@@ -63,6 +63,15 @@ docker compose up --build
 The app is served at http://localhost:8000 with autoreload; edits on the
 host are picked up immediately. `docker compose down -v` tears it down and
 drops the Postgres volume.
+
+{% if cookiecutter.use_dramatiq == 'y' or cookiecutter.use_channels == 'y' %}
+The `valkey` Compose service provides the broker and channel layer.
+Python integrations use the `redis` client and `redis://` connection URLs.
+{% if cookiecutter.use_channels == 'y' %}
+Set `CHANNEL_LAYER_URL` to change the channel layer endpoint (default:
+`redis://localhost:6379/0`). Compose points it at the `valkey` service.
+{% endif %}
+{% endif %}
 
 ## Continuous Integration
 

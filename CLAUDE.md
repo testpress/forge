@@ -42,7 +42,7 @@ app/
 ├── forms/        # base form class + custom fields
 ├── helpers/      # custom template tags ONLY — every file here auto-loads as one
 ├── models/       # see BaseModel below
-├── tasks/        # Dramatiq actors (only if use_celery=y — see below)
+├── tasks/        # Dramatiq actors (only if use_dramatiq=y — see below)
 ├── templates/    # Django templates (Jinja profile for djlint)
 ├── utils/        # generic, non-app-specific helper functions
 └── views/        # Django views
@@ -64,7 +64,7 @@ tests/            # pytest suite; tests/factories (factory-boy), tests/mixins
   assumptions into `app/api/`.
 - Optional integrations are all gated by `cookiecutter.json` flags
   (`use_preline`, `use_sentry`, `use_channels`, `use_django_ninja`,
-  `use_celery`). When adding a dependency or code path tied to one of
+  `use_dramatiq`). When adding a dependency or code path tied to one of
   these, gate it the same way rather than assuming it's always present.
 
 ## Preferred libraries (already in the template — don't reach for alternatives)
@@ -74,9 +74,8 @@ tests/            # pytest suite; tests/factories (factory-boy), tests/mixins
 - Timestamps / audit history: `django-model-utils` (`TimeStampedModel`) +
   `django-simple-history`
 - Forms: `django-widget-tweaks`
-- Background tasks: `dramatiq[redis]` (only when `use_celery=y` — the
-  flag kept its original name; see the README's Background tasks section
-  for why). `config/dramatiq.py` sets up the broker (Dramatiq has no
+- Background tasks: `dramatiq[redis]` (only when `use_dramatiq=y`).
+  `config/dramatiq.py` sets up the broker (Dramatiq has no
   Celery-style automatic Django integration, so it calls `django.setup()`
   itself) and registers `app/domain/background_task.py`'s
   `BackgroundTaskMiddleware`, which replaces the old Celery signal
@@ -130,6 +129,8 @@ tests/            # pytest suite; tests/factories (factory-boy), tests/mixins
   section.
 - Testing: `pytest` + `pytest-django` + `factory-boy` + `faker` +
   `pytest-mock` + `pytest-asyncio` + `pytest-xdist`
+- Compose uses Valkey 8 with a `valkey` service and `valkey_data` production volume.
+  Python libraries use the Redis protocol and `redis://` URLs.
 - Redis has no ceiling pin — `dramatiq[redis]` (`redis<9.0,>=4.0`) and
   `channels-redis` (`redis>=4.6`) don't impose one the way Celery's kombu
   transport used to, so it just tracks the latest release.

@@ -68,10 +68,13 @@ ALLOWED_HOSTS=localhost,127.0.0.1
 # ------------------------------------------------------------------------------
 SENTRY_DSN=
 {% endif %}
-{% if cookiecutter.use_celery == 'y' %}
+{% if cookiecutter.use_dramatiq == 'y' %}
 # Background tasks (Dramatiq)
 # ------------------------------------------------------------------------------
 DRAMATIQ_BROKER_URL=redis://localhost:6379/0
+{% endif %}
+{% if cookiecutter.use_channels == 'y' %}
+CHANNEL_LAYER_URL=redis://localhost:6379/0
 {% endif %}
 {% if cookiecutter.use_django_ninja == 'y' %}
 # API
@@ -117,7 +120,7 @@ def setup_project():
     remove_api_files()
     {% endif %}
 
-    {% if cookiecutter.use_celery != 'y' %}
+    {% if cookiecutter.use_dramatiq != 'y' %}
     print("Removing background-task files (not selected)...")
     remove_background_task_files()
     {% endif %}
@@ -146,8 +149,8 @@ def setup_project():
     print("Interactive docs: http://localhost:8000/api/docs")
     {% endif %}
 
-    {% if cookiecutter.use_celery == 'y' %}
-    print("Background tasks enabled (Dramatiq + Redis).")
+    {% if cookiecutter.use_dramatiq == 'y' %}
+    print("Background tasks enabled (Dramatiq + Valkey).")
     print("Start a worker with: uv run dramatiq config.dramatiq")
     {% endif %}
 
