@@ -79,6 +79,7 @@ dev = [
     "pytest-cov==5.0.0",
     "pytest-django==4.8.0",
     "pytest-sugar==1.0.0",
+    "pytest-socket==0.8.0",
     "ruff",
     "djlint",
     "pytest-mock==3.14.1",
@@ -105,6 +106,8 @@ addopts = """
 --reuse-db
 --nomigrations
 --strict-markers
+--disable-socket
+--allow-unix-socket
 --disable-warnings
 --tb=short
 """
@@ -112,6 +115,7 @@ plugins = [
   "pytest-cov",
   "pytest-django",
   "pytest-env",
+  "pytest-socket",
   "pytest-asyncio"
 ]
 python_files = ["tests.py", "test_*.py", "*_tests.py"]

@@ -121,6 +121,8 @@ your_project_name/
 ## Development
 
 - Run tests: `uv run pytest`
+- Tests block network sockets by default using `pytest-socket`; mock external
+  services. Unix sockets remain available for async event loops.
 - Format code: `uv run ruff format .` and `uv run ruff check --fix .`
 - Lint templates: `uv run djlint .`
 - Check code quality: `pre-commit run --all-files`
