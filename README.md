@@ -46,8 +46,11 @@ cookiecutter https://github.com/testpress/forge.git
      - Sentry error tracking
      - Django Channels for WebSocket support
      - django-ninja for a REST API
-     - Dramatiq + Redis for background tasks (the one option that defaults
-       to "y"; answer "n" to keep the project free of a Redis dependency)
+     - Dramatiq + Redis for background tasks (`use_celery`, default "y";
+       the option retains its legacy name, but uses Dramatiq)
+
+   Redis is included when background tasks or Django Channels are enabled.
+   Disable both to generate a project without Redis.
 
 3. Navigate to your new project directory:
 ```bash
@@ -75,9 +78,9 @@ uv run python manage.py migrate
 uv run python manage.py runserver
 ```
 
-Alternatively, skip steps 4-7 and run everything (Django, Postgres, and —
-if you enabled background tasks or Channels — Redis and a worker) with
-Docker Compose instead:
+Alternatively, skip steps 4-7 and run Django and Postgres with Docker
+Compose instead. Redis is included when background tasks or Channels are
+enabled; a Dramatiq worker is included only when background tasks are enabled:
 
 ```bash
 cd your_project_name
@@ -258,24 +261,28 @@ docs) while running as ordinary Django, so authentication, middleware,
 models and tests are all shared with the rest of the project.
 
 ### Background tasks (Dramatiq + Redis)
+
+Forge uses **Dramatiq**, with Redis as its broker, for background tasks.
+Celery is not installed or used. The Cookiecutter option is still named
+`use_celery` to preserve compatibility with saved configurations and CI scripts.
+
 If you selected "y" for `use_celery` (the default), the template includes:
+
 - A configured Dramatiq broker in `config/dramatiq.py`
 - Example actors in `app/tasks/`
 - A `BackgroundTask` model recording each run's status, progress events and
   output files, plus the middleware that keeps it up to date
 - A `worker` and `redis` service in `docker-compose.yml`
 
-(The flag is still called `use_celery` — it originally set up Celery;
-see the note below on why it wasn't renamed when the implementation
-switched to Dramatiq.)
+With Redis running, start a worker with:
 
-Run a worker with:
 ```bash
 uv run dramatiq config.dramatiq
 ```
 
-Answer "n" and none of the above is generated — no `dramatiq`/`redis`
-dependency, no broker to run, no Redis service in Compose.
+Answer "n" to omit the Dramatiq dependency, broker configuration, task
+models, example actors, and worker service. Redis is still included if
+Django Channels is enabled.
 
 > **Why this flag defaults to "y" when every other optional flag defaults
 > to "n":** the others are additive, so "n" gives you what the template
