@@ -2,6 +2,9 @@
 
 Guidance for Claude (or any LLM) working in this repository.
 
+Read [CONTRIBUTING.md](CONTRIBUTING.md) for commit message and code review
+guidelines before drafting commits or preparing reviews.
+
 ## What this repo is
 
 `forge` (testpress/forge) is a **Cookiecutter template**, not an app.

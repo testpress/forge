@@ -295,7 +295,9 @@ Django Channels is enabled.
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for
+commit message and code review guidelines. Generated projects include the
+same guide and an `AGENTS.md` pointer for AI agents.
 
 ## License
 

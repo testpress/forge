@@ -78,6 +78,11 @@ Set `CHANNEL_LAYER_URL` to change the channel layer endpoint (default:
 `.github/workflows/ci.yml` runs ruff, djlint, mypy, a Django migrations
 check, and pytest on every push/PR - see the file for details.
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for commit message and code review
+guidelines. AI agents should read [AGENTS.md](AGENTS.md).
+
 ## License
 
 {{ cookiecutter.project_name }} is licensed under the {{ cookiecutter.open_source_license }} license.
