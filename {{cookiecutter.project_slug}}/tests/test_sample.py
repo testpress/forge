@@ -12,7 +12,9 @@ class TestUser(BaseTestCase, UserMixin):
 
     def test_add_and_check_permission(self):
         user = self.create_user()
-        permission = Permission.objects.create(codename="view_reports", name="View reports")
+        permission = Permission.objects.create(
+            codename="view_reports", name="View reports"
+        )
 
         user.add_perm(permission)
 
