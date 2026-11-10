@@ -18,6 +18,8 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import LogoutView
 from django.urls import URLPattern
 from django.urls import URLResolver
 from django.urls import path
@@ -27,12 +29,16 @@ from app.api.urls import api
 {% if cookiecutter.use_dramatiq == 'y' %}
 from app.views.ping import trigger_ping_task
 {% endif %}
+from app.views.home import home
 
 # Annotated explicitly: with only the admin route present (the flags below
 # all off), mypy would infer list[URLResolver] from that single entry and
 # then reject the URLPattern entries appended under `if settings.DEBUG`.
 urlpatterns: list[URLPattern | URLResolver] = [
+    path("", home, name="home"),
     path("admin/", admin.site.urls),
+    path("login/", LoginView.as_view(), name="login"),
+    path("logout/", LogoutView.as_view(), name="logout"),
 {%- if cookiecutter.use_dramatiq == 'y' %}
     path("ping-task/", trigger_ping_task, name="ping-task"),
 {%- endif %}

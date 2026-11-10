@@ -154,7 +154,11 @@ def setup_project():
     print("Start a worker with: uv run dramatiq config.dramatiq")
     {% endif %}
 
-    print("Setup complete.")
+    print(
+        "Setup complete. Run 'python manage.py migrate && "
+        "python manage.py seed_demo_data' then 'python manage.py runserver' "
+        "to log in at http://localhost:8000 with 9999999999 / demo-password."
+    )
 
 
 if __name__ == "__main__":

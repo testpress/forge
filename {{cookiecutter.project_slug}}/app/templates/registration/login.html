@@ -1,0 +1,28 @@
+{% raw %}{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Log in" %}{% endblock title %}
+
+{% block content %}
+  <div class="max-w-sm mx-auto px-4 py-16">
+    <h1 class="text-xl font-semibold text-center dark:text-white">
+      {% translate "Log in" %}
+    </h1>
+    {% if form.errors %}
+      <p class="mt-4 text-sm text-red-600 text-center">
+        {% translate "Incorrect phone number or password." %}
+      </p>
+    {% endif %}
+    <form class="mt-6 space-y-4" method="post">
+      {% csrf_token %}
+      {% include "widgets/field.html" with field=form.username %}
+      {% include "widgets/field.html" with field=form.password %}
+      <input type="hidden" name="next" value="{{ next }}" />
+      <button type="submit"
+              class="w-full py-2 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700">
+        {% translate "Log in" %}
+      </button>
+    </form>
+  </div>
+{% endblock content %}
+{% endraw %}

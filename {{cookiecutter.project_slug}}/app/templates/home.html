@@ -1,0 +1,23 @@
+{% raw %}{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Home" %}{% endblock title %}
+
+{% block content %}
+  <div class="max-w-2xl mx-auto px-4 py-16 text-center">
+    <h1 class="text-2xl font-semibold dark:text-white">
+      {% blocktranslate with name=user.phone_number %}Welcome, {{ name }}{% endblocktranslate %}
+    </h1>
+    <p class="mt-2 text-sm text-gray-500 dark:text-neutral-400">
+      {% translate "You're logged in. Replace this page with your own." %}
+    </p>
+    <form class="mt-6" action="{% url 'logout' %}" method="post">
+      {% csrf_token %}
+      <button type="submit"
+              class="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800">
+        {% translate "Log out" %}
+      </button>
+    </form>
+  </div>
+{% endblock content %}
+{% endraw %}

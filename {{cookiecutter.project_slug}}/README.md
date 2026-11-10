@@ -20,10 +20,19 @@
    python manage.py migrate
    ```
 
-4. Start the development server:
+4. Create a demo user to log in with (no-op outside `DEBUG`, safe to re-run):
+   ```bash
+   python manage.py seed_demo_data
+   ```
+
+5. Start the development server:
    ```bash
    python manage.py runserver
    ```
+
+Visit http://localhost:8000 and log in with the phone number and password
+printed by `seed_demo_data` (`9999999999` / `demo-password` by default - see
+`app/management/commands/seed_demo_data.py`).
 {% if cookiecutter.use_django_ninja == 'y' %}
 ## API
 
@@ -62,7 +71,8 @@ docker compose up --build
 
 The app is served at http://localhost:8000 with autoreload; edits on the
 host are picked up immediately. `docker compose down -v` tears it down and
-drops the Postgres volume.
+drops the Postgres volume. The entrypoint runs `seed_demo_data` on startup,
+so you can log in right away with `9999999999` / `demo-password`.
 
 {% if cookiecutter.use_dramatiq == 'y' or cookiecutter.use_channels == 'y' %}
 The `valkey` Compose service provides the broker and channel layer.

@@ -190,6 +190,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-user-model
 AUTH_USER_MODEL = "app.User"
 
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "home"
+LOGOUT_REDIRECT_URL = "login"
+
 {% if cookiecutter.use_dramatiq == "y" -%}
 # Background tasks (Dramatiq)
 # ------------------------------------------------------------------------------
