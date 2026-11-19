@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Run the generated project's CI quality gates before pushing.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+step() {
+  echo
+  echo "==> $1"
+  shift
+  "$@"
+}
+
+uv sync --extra dev
+step "Lint" uv run ruff check .
+step "Formatting" uv run ruff format --check .
+step "Templates" uv run djlint . --check
+step "Types" uv run mypy .
+step "Migrations up to date" uv run python manage.py makemigrations --check --dry-run
+step "Tests" uv run pytest --cov --cov-report=term-missing
+
+echo
+echo "All checks passed."

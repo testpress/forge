@@ -56,33 +56,24 @@ cookiecutter https://github.com/testpress/forge.git
 cd your_project_name
 ```
 
-4. Install dependencies using uv:
+4. Start the development environment (requires uv, Node.js/npm and Docker):
 ```bash
-uv sync
+bin/dev
 ```
 
-5. Initialize git and install pre-commit hooks:
+This prepares dependencies, migrations and demo data, then starts Django,
+Vite and the optional worker together. See [Development commands](#development-commands)
+for tests and checks.
+
+5. Optionally initialize git and install pre-commit hooks:
 ```bash
 git init
-pre-commit install
+uv run pre-commit install
 ```
 
-6. Run migrations:
-```bash
-uv run python manage.py migrate
-```
-
-7. Start the development server:
-```bash
-uv run python manage.py runserver
-```
-
-Alternatively, skip steps 4-7 and run Django and Postgres with Docker
-Compose instead. Valkey is included when background tasks or Channels are
-enabled; a Dramatiq worker is included only when background tasks are enabled:
+Alternatively, run Django and its infrastructure in Docker Compose:
 
 ```bash
-cd your_project_name
 docker compose up --build
 ```
 
@@ -106,6 +97,8 @@ your_project_name/
 │   └── templates/         # Django templates
 ├── frontend/               # Vite/Tailwind project (package.json, css/, js/)
 ├── config/                # Project settings and configuration
+├── bin/                   # Single-command development, tests and checks
+├── Procfile.dev           # Django, Vite and optional worker processes
 ├── docker/                # Container entrypoint script
 ├── docs/                  # Documentation
 ├── locale/                # Translation files
@@ -130,6 +123,23 @@ your_project_name/
 - Check code quality: `pre-commit run --all-files`
 - Add new dependencies: `uv add package-name`
 - Add development dependencies: `uv add --dev package-name`
+
+## Development commands
+
+Generated projects include executable helpers, following the same workflow
+for every project:
+
+- `bin/dev`: prepare the environment and start Django, Vite and the optional
+  Dramatiq worker, with infrastructure in Docker.
+- `bin/test [pytest arguments]`: run the test suite.
+- `bin/check`: run all generated CI quality gates.
+
+`bin/dev` creates a missing `.env` from `.env.example` with a fresh secret,
+installs dependencies, migrates and seeds the demo user. It preserves the
+configured database (SQLite by default); the generated README explains
+using the bundled Postgres service. Use `WEB_PORT=8010 bin/dev` for another
+Django port. Ctrl+C stops the app processes; `docker compose down` stops
+infrastructure.
 
 ## Docker
 

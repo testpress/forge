@@ -4,31 +4,29 @@
 
 ## Development setup
 
-1. Create a virtual environment and activate it:
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
-   ```
+Install uv, Node.js/npm and Docker, then run:
 
-2. Install dependencies:
-   ```bash
-   uv sync
-   ```
+```bash
+bin/dev
+```
 
-3. Run migrations:
-   ```bash
-   python manage.py migrate
-   ```
+This creates `.env` when missing, starts Postgres, Mailpit{% if cookiecutter.use_dramatiq == 'y' or cookiecutter.use_channels == 'y' %} and Valkey{% endif %},
+installs dependencies, applies migrations, seeds the demo user, and runs
+Django, Vite{% if cookiecutter.use_dramatiq == 'y' %} and the Dramatiq worker{% endif %} together.
+`Ctrl+C` stops the app processes. Containers stay running until
+`docker compose down`; add `-v` only to delete the local database volume.
 
-4. Create a demo user to log in with (no-op outside `DEBUG`, safe to re-run):
-   ```bash
-   python manage.py seed_demo_data
-   ```
+The generated `.env` defaults to SQLite. To use the supplied Postgres
+service, set `DATABASE_URL=postgres://postgres:postgres@localhost:5432/{{ cookiecutter.project_slug }}`
+in `.env` (adjust it if you change `POSTGRES_*` credentials).
+Existing `.env` values are preserved. `WEB_PORT=8010 bin/dev` changes the
+Django port. Mailpit is at http://localhost:8025.
 
-5. Start the development server:
-   ```bash
-   python manage.py runserver
-   ```
+```bash
+bin/test                       # Full test suite
+bin/test -k login -x            # Pass arguments to pytest
+bin/check                      # Lint, formatting, templates, types, migrations, tests
+```
 
 Visit http://localhost:8000 and log in with the phone number and password
 printed by `seed_demo_data` (`9999999999` / `demo-password` by default - see

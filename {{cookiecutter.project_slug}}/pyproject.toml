@@ -69,6 +69,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     # Development & testing tools
+    "honcho==2.0.0",
     "coverage==7.6.1",
     "django-coverage-plugin==3.1.0",
     "django-debug-toolbar==7.0.0",

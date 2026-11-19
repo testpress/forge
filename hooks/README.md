@@ -55,7 +55,7 @@ You'll be prompted to enter details like:
 The template will create:
 
 * A full Django project
-* `.env` file with generated secret key
+* `.env` file created from `.env.example` with a generated secret key
 * `pyproject.toml` with uv-compatible configuration
 * Optional integrations (e.g., Sentry) based on input
 * `README.md` for setup instructions

@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# Prepare and run the local app, frontend and optional worker.
+# Usage: bin/dev or WEB_PORT=8010 bin/dev
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+export DJANGO_SETTINGS_MODULE=config.local
+export PYTHONUNBUFFERED=1
+export WEB_PORT="${WEB_PORT:-8000}"
+
+need() {
+  command -v "$1" >/dev/null 2>&1 || {
+    echo "bin/dev: '$1' is required. $2" >&2
+    exit 1
+  }
+}
+need uv "Install it from https://docs.astral.sh/uv/"
+need node "Install Node.js for the frontend."
+need npm "Install it together with Node.js."
+need docker "Install Docker Desktop and start it."
+docker info >/dev/null 2>&1 || {
+  echo "bin/dev: Docker isn't running. Start it and retry." >&2
+  exit 1
+}
+
+if [ ! -f .env ]; then
+  uv run --no-project python - <<'PYTHON'
+import secrets
+from pathlib import Path
+
+text = Path(".env.example").read_text()
+text = text.replace("replace-with-a-random-secret-key", secrets.token_urlsafe(50))
+Path(".env").write_text(text)
+PYTHON
+  echo "==> Created .env with a fresh secret key"
+fi
+
+echo "==> Starting development services"
+docker compose up -d --wait --wait-timeout 60 db mailpit{% if cookiecutter.use_dramatiq == 'y' or cookiecutter.use_channels == 'y' %} valkey{% endif %}
+
+echo "==> Installing Python dependencies"
+uv sync --extra dev
+
+echo "==> Installing frontend dependencies"
+if [ -f frontend/package-lock.json ]; then
+  npm --prefix frontend ci
+else
+  npm --prefix frontend install
+fi
+
+echo "==> Applying migrations"
+uv run python manage.py migrate --noinput
+
+echo "==> Seeding demo user (safe to re-run)"
+uv run python manage.py seed_demo_data
+
+echo "==> App: http://localhost:${WEB_PORT} | Mail: http://localhost:8025"
+echo "==> Ctrl+C stops the app processes; docker compose down stops services."
+# Django reads .env via django-environ, just like management commands above.
+# Avoid Honcho parsing the file a second time with different dotenv rules.
+exec uv run honcho -e /dev/null -f Procfile.dev start

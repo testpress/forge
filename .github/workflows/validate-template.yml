@@ -62,6 +62,10 @@ jobs:
         # during generation - this step's exit code is the first signal
         # that baking itself (including that setup) didn't fail outright.
 
+      - name: Check development script syntax
+        working-directory: testproj
+        run: bash -n bin/dev bin/test bin/check
+
       - name: Ruff check
         working-directory: testproj
         run: uv run ruff check .

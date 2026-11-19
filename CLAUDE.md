@@ -132,6 +132,11 @@ tests/            # pytest suite; tests/factories (factory-boy), tests/mixins
   section.
 - Testing: `pytest` + `pytest-django` + `factory-boy` + `faker` +
   `pytest-mock` + `pytest-asyncio` + `pytest-xdist`
+- Local commands: `bin/dev` prepares dependencies, environment, migrations and
+  demo data, then uses Honcho (`Procfile.dev`) to run Django, Vite and the
+  optional worker. `bin/test` forwards pytest arguments; `bin/check` runs
+  generated CI quality gates. `.env.example` is shared by the generation
+  hook and `bin/dev`; keep its defaults in sync with the settings.
 - Development email: Mailpit in `docker-compose.yml`, inbox on localhost:8025
   and SMTP on localhost:1025. `config.local` uses SMTP with env-overridable
   `EMAIL_HOST`/`EMAIL_PORT`; Compose points web and worker at `mailpit:1025`.

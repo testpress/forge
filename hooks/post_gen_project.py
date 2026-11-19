@@ -59,32 +59,10 @@ def create_env_file():
     env_file_path = os.path.join(project_directory, ".env")
 
     secret_key = generate_secret_key()
-    env_content = f"""DEBUG=True
-SECRET_KEY={secret_key}
-DATABASE_URL=sqlite:///db.sqlite3
-ALLOWED_HOSTS=localhost,127.0.0.1
-{% if cookiecutter.use_sentry == 'y' %}
-# Sentry
-# ------------------------------------------------------------------------------
-SENTRY_DSN=
-{% endif %}
-{% if cookiecutter.use_dramatiq == 'y' %}
-# Background tasks (Dramatiq)
-# ------------------------------------------------------------------------------
-DRAMATIQ_BROKER_URL=redis://localhost:6379/0
-{% endif %}
-{% if cookiecutter.use_channels == 'y' %}
-CHANNEL_LAYER_URL=redis://localhost:6379/0
-{% endif %}
-{% if cookiecutter.use_django_ninja == 'y' %}
-# API
-# ------------------------------------------------------------------------------
-# Bearer tokens are signed with SECRET_KEY above - there is no separate
-# API signing key to configure.
-API_TOKEN_MAX_AGE=86400
-CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
-{% endif %}
-"""
+    with open(".env.example") as example_file:
+        env_content = example_file.read().replace(
+            "replace-with-a-random-secret-key", secret_key
+        )
 
     with open(env_file_path, "w") as env_file:
         env_file.write(env_content)
@@ -155,8 +133,7 @@ def setup_project():
     {% endif %}
 
     print(
-        "Setup complete. Run 'python manage.py migrate && "
-        "python manage.py seed_demo_data' then 'python manage.py runserver' "
+        "Setup complete. Run 'bin/dev' to start the development environment "
         "to log in at http://localhost:8000 with 9999999999 / demo-password."
     )
 

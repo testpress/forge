@@ -1,0 +1,4 @@
+web: python manage.py runserver 0.0.0.0:$WEB_PORT
+frontend: npm --prefix frontend run start -- --strictPort
+{% if cookiecutter.use_dramatiq == 'y' %}worker: dramatiq config.dramatiq
+{% endif %}
