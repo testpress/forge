@@ -132,6 +132,10 @@ tests/            # pytest suite; tests/factories (factory-boy), tests/mixins
   section.
 - Testing: `pytest` + `pytest-django` + `factory-boy` + `faker` +
   `pytest-mock` + `pytest-asyncio` + `pytest-xdist`
+- Development email: Mailpit in `docker-compose.yml`, inbox on localhost:8025
+  and SMTP on localhost:1025. `config.local` uses SMTP with env-overridable
+  `EMAIL_HOST`/`EMAIL_PORT`; Compose points web and worker at `mailpit:1025`.
+  Mailpit is excluded from production.
 - Compose uses Valkey 8 with a `valkey` service and `valkey_data` production volume.
   Python libraries use the Redis protocol and `redis://` URLs.
 - Redis has no ceiling pin — `dramatiq[redis]` (`redis<9.0,>=4.0`) and

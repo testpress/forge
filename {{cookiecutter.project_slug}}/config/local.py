@@ -23,3 +23,10 @@ MIDDLEWARE += [  # noqa: F405
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"  # noqa: F405
+
+# Capture development email in Mailpit (Docker or a local Django process).
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = env("EMAIL_HOST", default="localhost")  # noqa: F405
+EMAIL_PORT = env.int("EMAIL_PORT", default=1025)  # noqa: F405
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = False

@@ -26,6 +26,12 @@ services:
       timeout: 5s
       retries: 5
 {% endif %}
+  mailpit:
+    image: axllent/mailpit:v1.27.4
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
+
   web:
     build:
       context: .
@@ -41,6 +47,8 @@ services:
       - .env
     environment:
       DJANGO_SETTINGS_MODULE: config.local
+      EMAIL_HOST: mailpit
+      EMAIL_PORT: 1025
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-{{ cookiecutter.project_slug }}}
 {%- if cookiecutter.use_channels == 'y' %}
       CHANNEL_LAYER_URL: redis://valkey:6379/0
@@ -49,6 +57,8 @@ services:
       DRAMATIQ_BROKER_URL: redis://valkey:6379/0
 {%- endif %}
     depends_on:
+      mailpit:
+        condition: service_started
       db:
         condition: service_healthy
 {%- if needs_valkey %}
@@ -74,9 +84,13 @@ services:
       - .env
     environment:
       DJANGO_SETTINGS_MODULE: config.local
+      EMAIL_HOST: mailpit
+      EMAIL_PORT: 1025
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-{{ cookiecutter.project_slug }}}
       DRAMATIQ_BROKER_URL: redis://valkey:6379/0
     depends_on:
+      mailpit:
+        condition: service_started
       db:
         condition: service_healthy
       valkey:

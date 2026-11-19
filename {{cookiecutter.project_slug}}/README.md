@@ -62,7 +62,7 @@ This needs a Valkey broker; `docker compose up` starts one for you, or set
 {% endif %}
 ## Docker
 
-Alternatively, run everything (this app, Postgres{% if cookiecutter.use_dramatiq == 'y' or cookiecutter.use_channels == 'y' %}, Valkey{% endif %}{% if cookiecutter.use_dramatiq == 'y' %}, and a Dramatiq
+Alternatively, run everything (this app, Mailpit, Postgres{% if cookiecutter.use_dramatiq == 'y' or cookiecutter.use_channels == 'y' %}, Valkey{% endif %}{% if cookiecutter.use_dramatiq == 'y' %}, and a Dramatiq
 worker{% endif %}) with Docker Compose:
 
 ```bash
@@ -82,6 +82,29 @@ Set `CHANNEL_LAYER_URL` to change the channel layer endpoint (default:
 `redis://localhost:6379/0`). Compose points it at the `valkey` service.
 {% endif %}
 {% endif %}
+
+## Development email
+
+Mailpit captures outgoing emails for inspection at http://localhost:8025.
+It starts with `docker compose up --build`. If Django runs directly on your
+machine, start just Mailpit:
+
+```bash
+docker compose up -d mailpit
+```
+
+Local Django uses SMTP at `localhost:1025`; Compose configures the web and
+worker services to use `mailpit:1025`. Override `EMAIL_HOST` and `EMAIL_PORT`
+for another local SMTP endpoint. No authentication or TLS is required.
+Mailpit captures messages without delivering them to recipients; messages
+are discarded when its container is removed. It is only included in the
+development stack and `config.local`.
+
+Send a test message with:
+
+```bash
+uv run python manage.py sendtestemail developer@example.com
+```
 
 ## Continuous Integration
 

@@ -163,6 +163,23 @@ jobs:
           docker compose logs
           exit 1
 
+      - name: Check development email capture
+        working-directory: testproj
+        run: |
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8025/readyz >/dev/null && break
+            sleep 2
+          done
+          docker compose exec -T web python manage.py sendtestemail mailpit-check@example.com
+          curl -sf http://localhost:8025/api/v1/messages | python -c '
+          import json, sys
+          messages = json.load(sys.stdin)["messages"]
+          assert any(
+              recipient["Address"] == "mailpit-check@example.com"
+              for message in messages for recipient in message["To"]
+          ), messages
+          '
+
       - name: Dump logs on failure
         if: failure()
         working-directory: testproj

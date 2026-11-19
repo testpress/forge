@@ -139,6 +139,7 @@ your_project_name/
 |----------|------|------------|
 | `web`    | always | Django dev server (`config.local`, `DEBUG=True`, autoreload via bind mount) on port 8000 |
 | `db`     | always | Postgres 17 on port 5432 (credentials via `POSTGRES_*` env vars, default `postgres`/`postgres`) |
+| `mailpit` | always (development) | Captures email; inbox at http://localhost:8025, SMTP on localhost:1025 |
 | `valkey` | `use_dramatiq` or `use_channels` | Valkey 8 on port 6379 |
 | `worker` | `use_dramatiq` | Dramatiq worker, same image, no autoreload |
 
